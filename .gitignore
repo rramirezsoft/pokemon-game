@@ -44,4 +44,4 @@ venv/*
 *.swp
 *.swo
 *.iml
-.venv/Lib
+.venv/
