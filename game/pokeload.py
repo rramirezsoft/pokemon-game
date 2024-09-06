@@ -152,6 +152,3 @@ def collect_pokemon():
 
     print("Datos de los 150 primeros Pokémon guardados en 'pokemon_data.json'")
 
-
-if __name__ == "__main__":
-    collect_pokemon()

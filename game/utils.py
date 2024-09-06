@@ -33,3 +33,19 @@ def render_text(font_path, size, text, color):
     """Renderizar texto con el tamaño y color especificado."""
     font = pygame.font.Font(font_path, size)
     return font.render(text, True, color)
+
+
+# En utils.py
+def replace_placeholders(text, placeholders):
+    """
+    Reemplaza los placeholders en un texto con los valores proporcionados.
+
+    :param text: El texto con los placeholders, por ejemplo "Hola {nombre}"
+    :param placeholders: Un diccionario con los valores a sustituir,
+                         por ejemplo {"nombre": "Ash"}
+    :return: El texto con los placeholders reemplazados.
+    """
+    for key, value in placeholders.items():
+        text = text.replace(f"{{{key}}}", value)
+    return text
+

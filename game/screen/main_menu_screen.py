@@ -1,8 +1,8 @@
 import pygame
-from utils import load_image, load_font, render_text
+from game.utils import load_image, load_font, render_text
 
 
-class MainMenuState:
+class MainMenuScreen:
     def __init__(self):
         self.background_image = load_image("../assets/img/fondo.png", (800, 600))
         self.font_path = load_font()

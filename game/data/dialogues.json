@@ -1,0 +1,36 @@
+{
+    "combat": {
+        "encounter": "Te has encontrado con un {pokemon_enemy} salvaje!",
+        "faint": "¡El {pokemon_enemy} ha sido derrotado!",
+        "win": "¡Has ganado la batalla!",
+        "lose": "Has perdido la batalla. ¡Inténtalo de nuevo!"
+    },
+    "professor": {
+        "greeting": [
+            "¡Hola! ¡Bienvenido al mundo de POKÉMON! ¡Me llamo OAK! ¡Pero la gente me llama el",
+            "PROFESOR POKÉMON! ¡Este mundo está habitado por unas criaturas llamadas POKÉMON!",
+            "Para algunos, los POKÉMON son mascotas. Pero otros los usan para pelear.",
+            "En cuanto a mí... Estudio a los POKÉMON como profesión.",
+            "Pero primero dime como te llamas.",
+            "..."
+        ],
+        "name_prompt": [
+            "¡Bien! ¡Tu nombre es {player_name}! ¡Tu propia leyenda POKÉMON está a punto de comenzar!",
+            "¡Te espera un mundo de sueños y aventuras con los POKÉMON! ¡Adelante!"
+        ],
+        "info_starters": [
+            "Ahora, voy a mostrarte a los POKÉMON que puedes elegir.",
+            "¡Estos son los tres POKÉMON iniciales! Uno es de fuego, otro de planta y el último de agua.",
+            "¡Elige al que más te guste!"
+        ],
+        "choose_starter": [
+            "¿Cuál de ellos quieres elegir?"
+        ],
+        "select_starter": [
+            "¿Quieres a {pokemon_name}, el POKÉMON del {pokemon_type}?"
+        ],
+        "confirm_starter": [
+            "¡Es una excelente elección! ¡Tu aventura comienza ahora!"
+        ]
+    }
+}

@@ -5,7 +5,7 @@ from PIL import Image
 
 
 class Pokemon:
-    def __init__(self, name, types, base_stats, evs, moves, height, weight, level=None, status=None, image_url=None):
+    def __init__(self, name, types, base_stats, evs, moves, height, weight, level=None, status=None):
         self.name = name
         self.types = types
         self.base_stats = base_stats
@@ -18,7 +18,7 @@ class Pokemon:
         self.experience = 0
         self.experience_to_next_level = self.calculate_exp_to_next_level()
         self.status = status
-        self.image_url = image_url
+        self.image = self.load_image()  # Cargar la imagen al inicializar
         self.current_stats = self.calculate_stats()
 
     @staticmethod
@@ -70,7 +70,7 @@ class Pokemon:
             "height_m": self.height,
             "weight_kg": self.weight,
             "moves": self.moves,
-            "image_url": self.image_url,
+            "image": self.image,
         }
 
     @classmethod
@@ -83,12 +83,11 @@ class Pokemon:
         moves = pokemon_data['moves']
         height = pokemon_data['physical_attributes']['height']
         weight = pokemon_data['physical_attributes']['weight']
-        image_url = pokemon_data['image_url']
-        return cls(name, types, base_stats, evs, moves, height, weight, image_url=image_url)
+        return cls(name, types, base_stats, evs, moves, height, weight)
 
     def load_image(self):
         """Carga la imagen del Pokémon si está disponible en el directorio de imágenes."""
-        image_path = f'assets/pokemon_images/{self.name.lower()}.png'
+        image_path = f'../assets/pokemon_images/{self.name.lower()}.png'
         if os.path.exists(image_path):
             return Image.open(image_path)
         return None  # Devuelve None si no se encuentra la imagen
@@ -104,3 +103,15 @@ def create_random_pokemon(pokemon_data_list):
     """Crear un Pokémon aleatorio a partir de una lista de datos de Pokémon."""
     random_pokemon_data = random.choice(pokemon_data_list)
     return Pokemon.from_json(random_pokemon_data)
+
+
+def create_pokemon(name):
+    pokemon_data_list = load_pokemon_data()
+
+    # Buscar el Pokémon por nombre
+    for pokemon_data in pokemon_data_list:
+        if pokemon_data['name'].lower() == name.lower():
+            return Pokemon.from_json(pokemon_data)
+
+    print(f"Pokémon con nombre '{name}' no encontrado.")
+    return None

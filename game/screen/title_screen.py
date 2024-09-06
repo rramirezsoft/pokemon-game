@@ -1,9 +1,9 @@
 import pygame
-from utils import load_image, load_font, render_text
-from main_menu_state import MainMenuState
+from game.utils import load_image, load_font, render_text
+from game.screen.oak_intro_screen import OakIntroScreen
 
 
-class TitleState:
+class TitleScreen:
     def __init__(self):
         self.background_image = load_image("../assets/img/fondo.png", (800, 600))
         self.logo_image = load_image("../assets/img/logo_pokemon.png", (600, 250))
@@ -18,11 +18,11 @@ class TitleState:
     def handle_events(self, event):
         """Maneja los eventos del teclado."""
         if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-            return MainMenuState()  # Cambia al estado del menú principal
+            return OakIntroScreen()  # Cambia a la pantalla para elegir nombre
         return self
 
     def update(self):
-        """Actualiza el estado, incluyendo el parpadeo del texto."""
+        """Actualiza la pantalla, incluyendo el parpadeo del texto."""
         current_time = pygame.time.get_ticks()
         if current_time - self.blink_time >= self.blink_interval:
             self.blink = not self.blink

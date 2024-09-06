@@ -1,5 +1,5 @@
 import pygame
-from title_state import TitleState
+from game.screen.title_screen import TitleScreen
 
 WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600  # Medidas de la pantalla
 
@@ -9,7 +9,7 @@ def main():
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     pygame.display.set_caption("Pokémon Game")
 
-    current_state = TitleState()  # Estado inicial
+    current_screen = TitleScreen()  # Pantalla inicial
 
     running = True
     while running:
@@ -17,16 +17,16 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-            # Manejar eventos del estado actual
-            new_state = current_state.handle_events(event)
-            if new_state is None:
+            # Manejar eventos de la pantalla actual
+            new_screen = current_screen.handle_events(event)
+            if new_screen is None:
                 running = False
-            elif new_state is not current_state:
-                current_state = new_state
+            elif new_screen is not current_screen:
+                current_screen = new_screen
 
-        current_state.update()
+        current_screen.update()
         screen.fill((0, 0, 0))  # Limpiar pantalla
-        current_state.draw(screen)
+        current_screen.draw(screen)
         pygame.display.flip()
         pygame.time.Clock().tick(60)
 
