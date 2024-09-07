@@ -1,6 +1,7 @@
 import pygame
 from game.screen.title_screen import TitleScreen
 
+
 WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600  # Medidas de la pantalla
 
 

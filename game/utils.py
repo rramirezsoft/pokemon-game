@@ -21,7 +21,7 @@ def load_all_pokemon_images(directory="../assets/pokemon_images", scale=None):
     return images
 
 
-def load_font(font_path="../assets/fonts/PressStart2P-Regular.ttf"):
+def load_font(font_path="../assets/fonts/pokemon.ttf"):
     """Cargar una fuente desde el archivo especificado, sin especificar el tamaño."""
     font_path = os.path.abspath(font_path)
     if not os.path.exists(font_path):
@@ -35,7 +35,6 @@ def render_text(font_path, size, text, color):
     return font.render(text, True, color)
 
 
-# En utils.py
 def replace_placeholders(text, placeholders):
     """
     Reemplaza los placeholders en un texto con los valores proporcionados.
@@ -48,4 +47,6 @@ def replace_placeholders(text, placeholders):
     for key, value in placeholders.items():
         text = text.replace(f"{{{key}}}", value)
     return text
+
+
 

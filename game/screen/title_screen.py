@@ -5,12 +5,12 @@ from game.screen.oak_intro_screen import OakIntroScreen
 
 class TitleScreen:
     def __init__(self):
-        self.background_image = load_image("../assets/img/fondo.png", (800, 600))
-        self.logo_image = load_image("../assets/img/logo_pokemon.png", (600, 250))
+        self.background_image = load_image("../assets/img/title/fondo.png", (800, 600))
+        self.logo_image = load_image("../assets/img/title/logo_pokemon.png", (600, 250))
         self.pikachu_image = load_image("../assets/pokemon_images/pikachu.png", (350, 350))
         self.font_path = load_font()
-        self.developer_text = render_text(self.font_path, 12, "Developed by RRamirezSoft \u00A9", (0, 0, 0))
-        self.press_enter_text = render_text(self.font_path, 25, "Press Enter", (255, 0, 0))
+        self.developer_text = render_text(self.font_path, 25, "Developed by RRamirezSoft \u00A9", (0, 0, 0))
+        self.press_enter_text = render_text(self.font_path, 55, "Press Enter", (255, 0, 0))
         self.blink = True
         self.blink_time = 0
         self.blink_interval = 500

@@ -2,6 +2,7 @@ import json
 import random
 import os
 from PIL import Image
+import pygame
 
 
 class Pokemon:
@@ -85,12 +86,34 @@ class Pokemon:
         weight = pokemon_data['physical_attributes']['weight']
         return cls(name, types, base_stats, evs, moves, height, weight)
 
-    def load_image(self):
-        """Carga la imagen del Pokémon si está disponible en el directorio de imágenes."""
+    def load_image(self, desired_size=None):
+        """Carga la imagen del Pokémon a su tamaño original y la redimensiona si es necesario."""
         image_path = f'../assets/pokemon_images/{self.name.lower()}.png'
         if os.path.exists(image_path):
-            return Image.open(image_path)
+            pil_image = Image.open(image_path)
+
+            # Si se proporciona un tamaño deseado, redimensionar la imagen
+            if desired_size:
+                pil_image = self.resize_image(pil_image, desired_size)
+
+            return self.pil_to_pygame(pil_image)
         return None  # Devuelve None si no se encuentra la imagen
+
+    @staticmethod
+    def pil_to_pygame(pil_image):
+        """Convierte una imagen PIL a un objeto pygame.Surface."""
+        pil_image = pil_image.convert("RGBA")
+        mode = pil_image.mode
+        size = pil_image.size
+        data = pil_image.tobytes()
+
+        pygame_image = pygame.image.fromstring(data, size, mode)
+        return pygame_image
+
+    @staticmethod
+    def resize_image(pil_image, size):
+        """Redimensiona la imagen PIL a un tamaño específico."""
+        return pil_image.resize(size, Image.Resampling.LANCZOS)
 
 
 def load_pokemon_data(file_path='data/pokemon_data.json'):

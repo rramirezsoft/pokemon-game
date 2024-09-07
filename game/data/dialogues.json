@@ -7,11 +7,9 @@
     },
     "professor": {
         "greeting": [
-            "¡Hola! ¡Bienvenido al mundo de POKÉMON! ¡Me llamo OAK! ¡Pero la gente me llama el",
-            "PROFESOR POKÉMON! ¡Este mundo está habitado por unas criaturas llamadas POKÉMON!",
-            "Para algunos, los POKÉMON son mascotas. Pero otros los usan para pelear.",
-            "En cuanto a mí... Estudio a los POKÉMON como profesión.",
-            "Pero primero dime como te llamas.",
+            "¡Hola! ¡Bienvenido al mundo de POKÉMON! ¡Me llamo OAK! ¡Pero la gente me llama el PROFESOR POKÉMON! ¡Este mundo está",
+            "habitado por unas criaturas llamadas POKÉMON! Para algunos, los POKÉMON son mascotas. Pero otros los usan",
+            "para pelear. En cuanto a mí... Estudio a los POKÉMON como profesión. Pero primero dime como te llamas.",
             "..."
         ],
         "name_prompt": [

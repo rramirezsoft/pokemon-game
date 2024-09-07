@@ -3,7 +3,7 @@ class Bag:
     def __init__(self):
         self.items = {
             "potions": 0,
-            "pokeballs": 0
+            "pokeballs": 1
         }
 
     def add_item(self, item_type, amount):
