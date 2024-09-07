@@ -356,3 +356,76 @@ class Footer:
             if self.text_rect.collidepoint(mouse_pos):
                 return True
         return False
+
+
+class MiniMenu:
+    def __init__(self, position, size=(150, 120), font_path="../assets/fonts/pokemon.ttf", font_size=22, options=None):
+        self.position = position
+        self.width, self.height = size
+        self.background_color = (255, 255, 255)  # Blanco
+        self.font_color = (0, 0, 0)  # Negro
+        self.font_size = font_size
+        self.font = pygame.font.Font(font_path, font_size)
+        self.options = options if options else ["Estadísticas", "Mover", "Atrás"]
+        self.border_radius = 10
+        self.show = False
+        self.selected_index = 0  # Índice de la opción seleccionada
+
+        # Crear el rectángulo del menú
+        self.rect = pygame.Rect(self.position[0], self.position[1], self.width, self.height)
+
+    def draw(self, screen):
+        if not self.show:
+            return
+
+        # Crear una superficie para la sombra con un gradiente
+        shadow_surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        shadow_color = (0, 0, 0, 80)  # Negro con opacidad
+        pygame.draw.rect(shadow_surface, shadow_color, (0, 0, self.width, self.height),
+                         border_radius=self.border_radius)
+
+        # Dibujar la sombra en la superficie del menú
+        shadow_rect = self.rect.move(3, 3)  # Mueve la sombra ligeramente hacia abajo y a la derecha
+        screen.blit(shadow_surface, shadow_rect)
+
+        # Dibujar el fondo del mini menú con bordes redondeados
+        pygame.draw.rect(screen, self.background_color, self.rect, border_radius=self.border_radius)
+
+        # Dibujar un borde más acentuado
+        pygame.draw.rect(screen, (0, 0, 0), self.rect, 2, border_radius=self.border_radius)
+
+        # Dibujar el texto en el mini menú con flecha para la opción seleccionada
+        for i, option in enumerate(self.options):
+            text_surface = self.font.render(option, True, self.font_color)
+            text_rect = text_surface.get_rect(
+                topleft=(self.position[0] + 30, self.position[1] + 10 + i * (self.font_size + 5)))
+
+            # Dibuja el texto
+            screen.blit(text_surface, text_rect)
+
+            # Dibuja la flecha `>` al lado de la opción seleccionada
+            if i == self.selected_index:  # Ajusta el índice según la opción preseleccionada
+                arrow_surface = self.font.render('>', True, self.font_color)
+                arrow_rect = arrow_surface.get_rect(
+                    topleft=(self.position[0] + 10, self.position[1] + 10 + i * (self.font_size + 5)))
+                screen.blit(arrow_surface, arrow_rect)
+
+    def toggle(self):
+        """Alterna la visibilidad del mini menú."""
+        self.show = not self.show
+
+    def is_mouse_over(self, mouse_pos):
+        """Verifica si el ratón está sobre el mini menú."""
+        return self.rect.collidepoint(mouse_pos)
+
+    def is_option_clicked(self, mouse_pos):
+        """ Verifica si se ha hecho clic en una de las opciones del mini menú. """
+        for i, option in enumerate(self.options):
+            # Obtener la posición y tamaño de la opción
+            text_surface = self.font.render(option, True, self.font_color)
+            text_rect = text_surface.get_rect(topleft=(self.position[0] + 10,
+                                                       self.position[1] + 10 + i * (self.font_size + 5)))
+            if text_rect.collidepoint(mouse_pos):
+                return i  # Retorna el índice de la opción clickeada
+        return None  # No se hizo clic en ninguna opción
+
