@@ -138,8 +138,10 @@ class PokemonMenuScreen:
                             self.mini_menu.options)
 
                     elif event.key == pygame.K_RETURN:
-                        # Ejecutar la opción seleccionada en el mini menú
-                        self.execute_mini_menu_option()
+                        # Ejecutar la opción seleccionada en el mini menú y cambiar de pantalla si es necesario
+                        new_screen = self.execute_mini_menu_option()
+                        if new_screen:
+                            return new_screen
 
                     elif event.key == pygame.K_BACKSPACE or event.key == pygame.K_ESCAPE:
                         # Deseleccionar la caja y ocultar el mini menú
@@ -218,7 +220,9 @@ class PokemonMenuScreen:
                 option_index = self.mini_menu.is_option_clicked(event.pos)
                 if option_index is not None:
                     self.mini_menu.selected_index = option_index
-                    self.execute_mini_menu_option()
+                    new_screen = self.execute_mini_menu_option()
+                    if new_screen:
+                        return new_screen
 
         # Manejo del evento del footer
         if self.footer.handle_events(event):
@@ -242,9 +246,12 @@ class PokemonMenuScreen:
                 return MainMenuScreen(self.player)
             else:
                 self.deselect_slot()
+
         elif option == "Datos":
-            # Implementa la funcionalidad para "Datos" aquí
-            print("Seleccionada opción: Datos")
+            # Cambiar a la pantalla de datos del Pokémon seleccionado
+            from game.screen.pokemon_data_screen import PokemonDataScreen
+            return PokemonDataScreen(self.player, self.pokemon_team[self.selected_index])
+
         elif option == "Mover":
             # Verificar si hay al menos dos Pokémon para intercambiar
             pokemon_count = sum(1 for pokemon in self.pokemon_team if pokemon is not None)
@@ -313,7 +320,7 @@ class PokemonMenuScreen:
             # Posicionar el mini menú a la derecha de la caja seleccionada
             slot_rect = self.slots[self.slot_selected].rect
             self.mini_menu.position = (
-            slot_rect.right - 10, slot_rect.top - 10)  # Ajusta la posición según sea necesario
+                slot_rect.right - 10, slot_rect.top - 10)  # Ajusta la posición según sea necesario
             self.mini_menu.rect.topleft = self.mini_menu.position
 
             print(f"MiniMenu position: {self.mini_menu.position}")  # Verificar posición
