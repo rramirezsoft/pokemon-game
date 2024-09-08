@@ -79,80 +79,145 @@ class PokemonMenuScreen:
         # Crear minimenu
         self.mini_menu = MiniMenu(position=(0, 0), size=(120, 100), options=["Datos", "Mover", "Atrás"])
 
+        self.moving_slot = None  # Variable para almacenar la primera caja seleccionada para mover.
+
     def handle_events(self, event):
-        """
-        Maneja eventos como clics del ratón o teclas.
-        """
         if event.type == pygame.QUIT:
             pygame.quit()
 
         elif event.type == pygame.KEYDOWN:
-            if self.slot_selected is None:  # Solo permite mover la preselección si no hay selección activa
-                if event.key == pygame.K_DOWN:
-                    # Mover preselección hacia abajo
-                    self.selected_index = (self.selected_index + 1) % len(self.slots)
-                    self.update_preselection()
+            # Si no estamos moviendo un Pokémon
+            if self.moving_slot is None:
+                if self.slot_selected is None:  # Solo permite mover la preselección si no hay selección activa
+                    if event.key == pygame.K_DOWN:
+                        # Mover preselección hacia abajo
+                        next_index = (self.selected_index + 1) % len(self.slots)
+                        # Verificar si el siguiente slot tiene un Pokémon, si no, no se mueve la selección
+                        if 0 <= next_index < len(self.pokemon_team) and self.pokemon_team[next_index] is not None:
+                            self.selected_index = next_index
+                            self.update_preselection()
 
-                elif event.key == pygame.K_UP:
-                    # Mover preselección hacia arriba
-                    self.selected_index = (self.selected_index - 1) % len(self.slots)
-                    self.update_preselection()
+                    elif event.key == pygame.K_UP:
+                        # Mover preselección hacia arriba
+                        next_index = (self.selected_index - 1) % len(self.slots)
+                        # Verificar si el slot anterior tiene un Pokémon, si no, no se mueve la selección
+                        if 0 <= next_index < len(self.pokemon_team) and self.pokemon_team[next_index] is not None:
+                            self.selected_index = next_index
+                            self.update_preselection()
 
-                elif event.key == pygame.K_RETURN:
-                    # Seleccionar la caja preseleccionada
-                    self.select_current_slot()
+                    elif event.key == pygame.K_RETURN:
+                        # Asegurarse de que el índice esté dentro del rango antes de acceder a pokemon_team
+                        if 0 <= self.selected_index < len(self.pokemon_team):
+                            # Seleccionar la caja preseleccionada solo si tiene un Pokémon
+                            if self.pokemon_team[self.selected_index] is not None:
+                                self.select_current_slot()
+                            else:
+                                print("No se puede seleccionar una caja vacía.")
+                        else:
+                            print("Índice fuera de rango.")
 
-                elif event.key == pygame.K_BACKSPACE or event.key == pygame.K_ESCAPE:
-                    if self.slot_selected is not None:
-                        # Deseleccionar la caja y ocultar el menú
+                    elif event.key == pygame.K_BACKSPACE or event.key == pygame.K_ESCAPE:
+                        if self.slot_selected is not None:
+                            # Deseleccionar la caja y ocultar el menú
+                            self.deselect_slot()
+                        else:
+                            # Salir de la pantalla si no hay selección activa
+                            from game.screen.main_menu_screen import MainMenuScreen
+                            return MainMenuScreen(self.player)
+
+                elif self.show_menu:
+                    # Manejo de eventos para el mini menú
+                    if event.key == pygame.K_DOWN:
+                        # Mover la selección hacia abajo en el mini menú
+                        self.mini_menu.selected_index = (self.mini_menu.selected_index + 1) % len(
+                            self.mini_menu.options)
+
+                    elif event.key == pygame.K_UP:
+                        # Mover la selección hacia arriba en el mini menú
+                        self.mini_menu.selected_index = (self.mini_menu.selected_index - 1) % len(
+                            self.mini_menu.options)
+
+                    elif event.key == pygame.K_RETURN:
+                        # Ejecutar la opción seleccionada en el mini menú
+                        self.execute_mini_menu_option()
+
+                    elif event.key == pygame.K_BACKSPACE or event.key == pygame.K_ESCAPE:
+                        # Deseleccionar la caja y ocultar el mini menú
                         self.deselect_slot()
-                    else:
-                        # Salir de la pantalla si no hay selección activa
-                        from game.screen.main_menu_screen import MainMenuScreen
-                        return MainMenuScreen(self.player)
 
-            elif self.show_menu:
-                # Manejo de eventos para el mini menú
+            # Si estamos en modo de movimiento de Pokémon
+            else:
                 if event.key == pygame.K_DOWN:
-                    # Mover la selección hacia abajo en el mini menú
-                    self.mini_menu.selected_index = (self.mini_menu.selected_index + 1) % len(self.mini_menu.options)
+                    # Mover la preselección de destino hacia abajo
+                    next_index = (self.selected_index + 1) % len(self.slots)
+                    if 0 <= next_index < len(self.pokemon_team) and self.pokemon_team[next_index] is not None:
+                        self.selected_index = next_index
+                    self.update_preselection()  # Mostrar dos selecciones
 
                 elif event.key == pygame.K_UP:
-                    # Mover la selección hacia arriba en el mini menú
-                    self.mini_menu.selected_index = (self.mini_menu.selected_index - 1) % len(self.mini_menu.options)
+                    # Mover la preselección de destino hacia arriba
+                    next_index = (self.selected_index - 1) % len(self.slots)
+                    if 0 <= next_index < len(self.pokemon_team) and self.pokemon_team[next_index] is not None:
+                        self.selected_index = next_index
+                    self.update_preselection()  # Mostrar dos selecciones
 
                 elif event.key == pygame.K_RETURN:
-                    # Ejecutar la opción seleccionada en el mini menú
-                    self.execute_mini_menu_option()
+                    # Confirmar el intercambio de Pokémon entre las dos celdas seleccionadas
+                    if (0 <= self.moving_slot < len(self.pokemon_team) and self.pokemon_team[
+                        self.moving_slot] is not None and
+                            0 <= self.selected_index < len(self.pokemon_team) and self.pokemon_team[
+                                self.selected_index] is not None):
+                        self.swap_pokemon_slots(self.moving_slot, self.selected_index)
+                    else:
+                        print("No se puede realizar el intercambio: asegúrate de que ambos slots contengan Pokémon.")
+                    self.moving_slot = None  # Terminar el modo de movimiento
+                    self.show_menu = False  # Ocultar el mini menú
+                    self.slot_selected = None  # No hay caja seleccionada
 
                 elif event.key == pygame.K_BACKSPACE or event.key == pygame.K_ESCAPE:
-                    # Deseleccionar la caja y ocultar el mini menú
-                    self.deselect_slot()
+                    # Cancelar el modo de movimiento y volver a la preselección normal
+                    self.moving_slot = None
+                    self.update_preselection()  # Volver a la selección normal
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            # Detectar clic en una caja
             mouse_pos = event.pos
+            # Detectar clic en una caja
             for index, slot in enumerate(self.slots):
                 if slot.rect.collidepoint(mouse_pos):
-                    if self.slot_selected is None:  # Si no hay selección activa
-                        if index == self.selected_index:
-                            # Si se hace clic en la caja preseleccionada, seleccionarla
-                            self.select_current_slot()
+                    if self.moving_slot is None:  # Si no hay movimiento activo
+                        if self.slot_selected is None:  # Si no hay selección activa
+                            # Si se hace clic en una caja, verificar si tiene un Pokémon
+                            if 0 <= index < len(self.pokemon_team) and self.pokemon_team[index] is not None:
+                                if index == self.selected_index:
+                                    # Si se hace clic en la caja preseleccionada, seleccionarla
+                                    self.select_current_slot()
+                                else:
+                                    # Si se hace clic en otra caja, preseleccionarla
+                                    self.selected_index = index
+                                    self.update_preselection()
+                            else:
+                                print("No se puede seleccionar una caja vacía.")
+
+                        elif index == self.slot_selected:
+                            # Si la caja seleccionada se clickea de nuevo, cerrar el menú
+                            self.deselect_slot()
+                    else:
+                        # Si estamos en modo de movimiento, intercambiar Pokémon
+                        if (0 <= self.moving_slot < len(self.pokemon_team) and self.pokemon_team[
+                            self.moving_slot] is not None and
+                                0 <= index < len(self.pokemon_team) and self.pokemon_team[index] is not None):
+                            self.swap_pokemon_slots(self.moving_slot, index)
                         else:
-                            # Si se hace clic en otra caja, preseleccionarla
-                            self.selected_index = index
-                            self.update_preselection()
-                    elif index == self.slot_selected:
-                        # Si la caja seleccionada se clickea de nuevo, cerrar el menú
-                        self.deselect_slot()
+                            print(
+                                "No se puede realizar el intercambio: asegúrate de que ambos slots contengan Pokémon.")
+                        self.moving_slot = None  # Terminar el modo de movimiento
+                        self.show_menu = False  # Ocultar el mini menú
 
             # Manejo del clic en el mini menú
             if self.show_menu:
-                option_index = self.mini_menu.is_option_clicked(mouse_pos)
+                option_index = self.mini_menu.is_option_clicked(event.pos)
                 if option_index is not None:
-                    # Cambiar la opción seleccionada
                     self.mini_menu.selected_index = option_index
-                    # Ejecutar la opción seleccionada en el mini menú
                     self.execute_mini_menu_option()
 
         # Manejo del evento del footer
@@ -173,25 +238,66 @@ class PokemonMenuScreen:
 
         if option == "Atrás":
             if self.slot_selected is None:
-                # Regresar a la pantalla anterior
                 from game.screen.main_menu_screen import MainMenuScreen
                 return MainMenuScreen(self.player)
             else:
-                # Deseleccionar la caja y ocultar el menú
                 self.deselect_slot()
-        elif option == "Estadísticas":
-            # Implementa la funcionalidad para "Estadísticas" aquí
-            print("Seleccionada opción: Estadísticas")
+        elif option == "Datos":
+            # Implementa la funcionalidad para "Datos" aquí
+            print("Seleccionada opción: Datos")
         elif option == "Mover":
-            # Implementa la funcionalidad para "Mover" aquí
-            print("Seleccionada opción: Mover")
+            # Verificar si hay al menos dos Pokémon para intercambiar
+            pokemon_count = sum(1 for pokemon in self.pokemon_team if pokemon is not None)
+            if pokemon_count >= 2:
+                # Iniciar el modo de movimiento
+                self.moving_slot = self.selected_index
+                self.show_menu = False  # Ocultar el mini menú mientras se realiza el movimiento
+                print(f"Modo de movimiento iniciado con el slot: {self.moving_slot}")
+            else:
+                # Si no hay suficientes Pokémon para intercambiar, hacer lo mismo que "Atrás"
+                self.deselect_slot()
+                print("No hay suficientes Pokémon para mover, se vuelve al estado anterior.")
+
+    def swap_pokemon_slots(self, slot_a, slot_b):
+        """ Intercambia los Pokémon entre dos slots. """
+        # Verificar que ambos slots tengan Pokémon antes de intentar intercambiarlos
+        if slot_a is not None and slot_b is not None and slot_a != slot_b:
+            pokemon_a = self.pokemon_team[slot_a]
+            pokemon_b = self.pokemon_team[slot_b]
+
+            if pokemon_a is not None and pokemon_b is not None:
+                # Intercambia los Pokémon en los slots
+                self.pokemon_team[slot_a], self.pokemon_team[slot_b] = self.pokemon_team[slot_b], self.pokemon_team[
+                    slot_a]
+                self.slots[slot_a].pokemon, self.slots[slot_b].pokemon = self.slots[slot_b].pokemon, self.slots[
+                    slot_a].pokemon
+                print(f"Intercambiados slots: {slot_a} con {slot_b}")
+
+                # Restablecer la selección y salir del modo de movimiento
+                self.moving_slot = None
+                self.slot_selected = None
+                self.show_menu = False  # Asegurarse de que el mini menú desaparezca
+
+                # Actualizar la preselección para que ninguna caja esté seleccionada
+                self.update_preselection()
+            else:
+                # Si alguno de los slots está vacío, no hacer nada
+                print("No se puede intercambiar, uno de los slots está vacío.")
+                self.moving_slot = None
+                self.update_preselection()
 
     def update_preselection(self):
         """
         Actualiza la preselección de las cajas.
+        Si estamos en modo de movimiento, destaca dos cajas: la de origen y la de destino.
         """
         for index, slot in enumerate(self.slots):
-            slot.selected = (index == self.selected_index)
+            if self.moving_slot is not None:
+                # Si estamos en modo de movimiento, mostrar dos cajas seleccionadas
+                slot.selected = (index == self.selected_index or index == self.moving_slot)
+            else:
+                # Si no estamos en modo de movimiento, solo se selecciona una caja
+                slot.selected = (index == self.selected_index)
 
     def update(self):
         pass
@@ -200,16 +306,20 @@ class PokemonMenuScreen:
         """
         Selecciona la caja preseleccionada.
         """
-        self.slot_selected = self.selected_index
-        self.show_menu = True  # Muestra el mini menú al lado de la caja seleccionada
+        if self.pokemon_team[self.selected_index] is not None:  # Solo seleccionar si el slot no está vacío
+            self.slot_selected = self.selected_index
+            self.show_menu = True  # Muestra el mini menú al lado de la caja seleccionada
 
-        # Posicionar el mini menú a la derecha de la caja seleccionada, un poco más cerca y arriba
-        slot_rect = self.slots[self.slot_selected].rect
-        self.mini_menu.position = (slot_rect.right - 10, slot_rect.top - 10)  # Ajusta la posición según sea necesario
-        self.mini_menu.rect.topleft = self.mini_menu.position
+            # Posicionar el mini menú a la derecha de la caja seleccionada
+            slot_rect = self.slots[self.slot_selected].rect
+            self.mini_menu.position = (
+            slot_rect.right - 10, slot_rect.top - 10)  # Ajusta la posición según sea necesario
+            self.mini_menu.rect.topleft = self.mini_menu.position
 
-        print(f"MiniMenu position: {self.mini_menu.position}")  # Verificar posición
-        self.mini_menu.show = True
+            print(f"MiniMenu position: {self.mini_menu.position}")  # Verificar posición
+            self.mini_menu.show = True
+        else:
+            print("No se puede seleccionar una caja vacía.")
 
     def deselect_slot(self):
         """

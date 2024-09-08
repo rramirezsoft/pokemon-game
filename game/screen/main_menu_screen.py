@@ -1,5 +1,4 @@
 import pygame
-
 from game import utils
 from game.ui import Button
 from game.screen.pokemon_menu_screen import PokemonMenuScreen
@@ -51,7 +50,9 @@ class MainMenuScreen:
 
     def handle_button_click(self, button_name):
         """Acciones cuando se hace clic en un botón."""
-        if button_name == "pokemon":
+        if button_name == "fight":
+            print("BATALLA")
+        elif button_name == "pokemon":
             return PokemonMenuScreen(self.player)
         elif button_name == "bag":
             print("Abrir bolsa")
@@ -65,13 +66,14 @@ class MainMenuScreen:
             print("Guardar juego")
 
     def update(self):
-        """Actualizar el estado hover de los botones."""
+        """Actualizar el estado hover de los botones"""
         mouse_pos = pygame.mouse.get_pos()
         for button in self.buttons.values():
             button.update(mouse_pos)
 
     def draw(self, screen):
         """Dibuja el menú principal."""
+
         # Dibujar fondo
         screen.blit(self.background, (0, 0))
 
