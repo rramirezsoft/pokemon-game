@@ -25,7 +25,7 @@ class OakIntroScreen:
         }
 
         self.selected_pokemon_name, self.selected_pokemon_type = "", ""  # Pokemon seleccionado
-        self.starter_pokemon = None  # Pokemon confirmado
+        self.starter_pokemon = False  # Pokemon confirmado
 
         # Dialogos
         self.dialogue_manager = (
@@ -69,17 +69,17 @@ class OakIntroScreen:
             self.dialog_stage = 'name_prompt'
             self.current_line_index, self.player = 0, Player(self.player_name)
         elif self.dialog_stage == 'select_starter':
-            self.starter_pokemon = create_pokemon(self.selected_pokemon_name)
+            self.starter_pokemon = True
             if self.starter_pokemon:
-                self.player.get_starter(self.starter_pokemon)
+                self.player.get_starter(self.selected_pokemon_name)
                 # Añadir 5 Pokémon adicionales al jugador
+
                 additional_pokemons = [
                     'Mewtwo', 'Rattata', 'Jigglypuff', 'Meowth', 'Psyduck'
                 ]
                 for pokemon_name in additional_pokemons:
-                    pokemon = create_pokemon(pokemon_name)
-                    if pokemon:
-                        self.player.get_starter(pokemon)
+                    self.player.get_starter(pokemon_name)
+
             self.dialog_stage, self.current_line_index = 'confirm_starter', 0
         elif self.dialog_stage == 'confirm_starter':
             return MainMenuScreen(self.player)

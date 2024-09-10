@@ -1,3 +1,5 @@
+from game.pokemon import create_pokemon
+
 
 class Bag:
     def __init__(self):
@@ -34,10 +36,13 @@ class Player:
         self.badges = []
         self.money = 0
 
-    def get_starter(self, pokemon):
+    def get_starter(self, pokemon_name):
         """Elige el pokemon inicial y lo añade a la lista de Pokémon del jugador."""
-        self.pokemons.append(pokemon)
-        print(f"¡Has elegido a {pokemon.name} como tu Pokémon inicial!")
+        starter_pokemon = create_pokemon(pokemon_name, level=5)
+        if starter_pokemon:
+            self.pokemons.append(starter_pokemon)
+        else:
+            print(f"No se pudo crear el Pokémon '{pokemon_name}'.")
 
     def capture_pokemon(self, pokemon):
         """Intenta capturar un nuevo Pokémon."""

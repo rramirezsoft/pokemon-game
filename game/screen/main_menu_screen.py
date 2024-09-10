@@ -7,7 +7,6 @@ from game.screen.pokemon_menu_screen import PokemonMenuScreen
 class MainMenuScreen:
     def __init__(self, player):
         self.player = player
-        print(player.__str__())
         self.font = pygame.font.Font(utils.load_font(), 35)
 
         # Cargar imagen de fondo
@@ -29,14 +28,14 @@ class MainMenuScreen:
 
         # Crear botones con posiciones ajustadas y dimensiones más pequeñas
         self.buttons = {
-            "fight": Button("Luchar", (80, 80, 150, 100), self.font, self.button_images["fight"]),
+            "fight": Button("Fight", (80, 80, 150, 100), self.font, self.button_images["fight"]),
             "pokemon": Button("Pokémon", (280, 80, 150, 100), self.font, self.button_images["pokemon"]),
-            "bag": Button("Bolsa", (80, 200, 150, 100), self.font, self.button_images["bag"]),
-            "shop": Button("Tienda", (280, 200, 150, 100), self.font, self.button_images["shop"]),
+            "bag": Button("Bag", (80, 200, 150, 100), self.font, self.button_images["bag"]),
+            "shop": Button("Shop", (280, 200, 150, 100), self.font, self.button_images["shop"]),
             "pokedex": Button("Pokédex", (80, 320, 150, 100), self.font, self.button_images["pokedex"]),
             "player": Button(self.player.name, (280, 320, 150, 100), self.font, self.button_images["player"]),
-            "options": Button("Ajustes", (80, 440, 150, 100), self.font, self.button_images["options"]),
-            "save": Button("Guardar", (280, 440, 150, 100), self.font, self.button_images["save"]),
+            "options": Button("Settings", (80, 440, 150, 100), self.font, self.button_images["options"]),
+            "save": Button("Save", (280, 440, 150, 100), self.font, self.button_images["save"]),
         }
 
     def handle_events(self, event):

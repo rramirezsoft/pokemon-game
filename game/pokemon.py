@@ -6,6 +6,8 @@ import pygame
 
 
 class Pokemon:
+    generated_ids = set()  # Set para almacenar todos los IDs generados
+
     def __init__(self, name, types, base_stats, evs, moves, height, weight, level=None, status=None):
         self.name = name
         self.types = types
@@ -20,7 +22,10 @@ class Pokemon:
         self.experience_to_next_level = self.calculate_exp_to_next_level()
         self.status = status
         self.image = self.load_image()  # Cargar la imagen al inicializar
-        self.current_stats = self.calculate_stats()
+        self.max_stats = self.calculate_stats()  # Guardar las estadísticas máximas
+        self.current_stats = self.max_stats.copy()  # Inicializar los HP actuales al máximo
+        self.current_hp = self.current_stats.get('hp', 0)  # Inicializar HP actuales
+        self.id = self.generate_id()  # Generamos un id unico de 6 cifras a cada pokemon
 
     @staticmethod
     def generate_ivs():
@@ -34,10 +39,27 @@ class Pokemon:
             "speed": random.randint(0, 31)
         }
 
+    @staticmethod
+    def generate_id():
+        """
+        Genera un ID de 6 cifras unico para cada pokemon.
+        Verifica que el ID no se repita
+        """
+        while True:
+            new_id = random.randint(100000, 999999)
+            if new_id not in Pokemon.generated_ids:
+                Pokemon.generated_ids.add(new_id)
+                return new_id
+
     def select_moves(self, moves):
         """Seleccionar hasta 4 movimientos disponibles según el nivel del Pokémon."""
         available_moves = [move for move in moves if move['level'] <= self.level]
-        return random.sample(available_moves, min(len(available_moves), 4))
+        selected_moves = random.sample(available_moves, min(len(available_moves), 4))
+
+        for move in selected_moves:
+            move['current_pp'] = move['pp']  # Inicializa current_pp con los PP máximos
+
+        return selected_moves
 
     def calculate_stats(self):
         """Calcular las estadísticas del Pokémon basadas en su nivel, base stats, IVs y EVs."""
@@ -59,6 +81,14 @@ class Pokemon:
         """Calcular la experiencia necesaria para el siguiente nivel."""
         return 4 * (self.level ** 3) // 5
 
+    def set_current_hp(self, hp):
+        """Establece el HP actual del Pokémon."""
+        self.current_hp = max(0, min(hp, self.max_stats.get('hp', 0)))
+
+    def is_fainted(self):
+        """Determina si el Pokémon está debilitado (faint)."""
+        return self.current_hp <= 0
+
     def get_pokemon_info(self):
         """Devolver la información completa del Pokémon en un formato estructurado."""
         return {
@@ -75,7 +105,7 @@ class Pokemon:
         }
 
     @classmethod
-    def from_json(cls, pokemon_data):
+    def from_json(cls, pokemon_data, level=None):
         """Crear un Pokémon a partir de los datos en formato JSON."""
         name = pokemon_data['name']
         types = pokemon_data['types']
@@ -84,7 +114,7 @@ class Pokemon:
         moves = pokemon_data['moves']
         height = pokemon_data['physical_attributes']['height']
         weight = pokemon_data['physical_attributes']['weight']
-        return cls(name, types, base_stats, evs, moves, height, weight)
+        return cls(name, types, base_stats, evs, moves, height, weight, level)
 
     def load_image(self, desired_size=None):
         """Carga la imagen del Pokémon a su tamaño original y la redimensiona si es necesario."""
@@ -128,13 +158,13 @@ def create_random_pokemon(pokemon_data_list):
     return Pokemon.from_json(random_pokemon_data)
 
 
-def create_pokemon(name):
+def create_pokemon(name, level=None):
     pokemon_data_list = load_pokemon_data()
 
     # Buscar el Pokémon por nombre
     for pokemon_data in pokemon_data_list:
         if pokemon_data['name'].lower() == name.lower():
-            return Pokemon.from_json(pokemon_data)
+            return Pokemon.from_json(pokemon_data, level=level)
 
     print(f"Pokémon con nombre '{name}' no encontrado.")
     return None

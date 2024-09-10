@@ -1,39 +1,6 @@
 import pygame
-from game.ui import PokemonSlot, Footer, MiniMenu
+from game.ui import PokemonSlot, Footer, MiniMenu, draw_pokemon_background
 import game.utils as utils
-
-
-def draw_custom_background(screen):
-    """
-    Dibuja un fondo personalizado
-
-    - La izquierda será roja con una franja diagonal en rojo oscuro.
-    - El triángulo superior izquierdo será rojo y el inferior derecho un tono suave gris/azul.
-
-    :param screen: Superficie de pygame en la que se dibuja el fondo.
-    """
-    # Definir los colores
-    red_color = (255, 86, 86)  # Rojo brillante
-    dark_red_color = (139, 0, 0)  # Rojo oscuro (franja diagonal)
-    soft_blue_gray = (230, 230, 255)  # Gris/Azul claro muy suave, casi blanco
-
-    # Obtener el tamaño de la pantalla
-    screen_width, screen_height = screen.get_size()
-
-    screen.fill((0, 12, 31))
-
-    # Crear un polígono en la mitad izquierda con rojo brillante
-    left_triangle_points = [(0, 0), (screen_width // 2, 0), (0, screen_height)]
-    pygame.draw.polygon(screen, red_color, left_triangle_points)
-
-    # Crear el triángulo inferior derecho en gris/azul claro
-    right_triangle_points = [(screen_width // 2, 0), (screen_width, screen_height), (0, screen_height)]
-    pygame.draw.polygon(screen, soft_blue_gray, right_triangle_points)
-
-    # Dibujar la franja diagonal en rojo oscuro
-    stripe_points = [(screen_width // 2 - 20, 0), (screen_width // 2 + 20, 0),
-                     (screen_width, screen_height), (screen_width - 40, screen_height)]
-    pygame.draw.polygon(screen, dark_red_color, stripe_points)
 
 
 class PokemonMenuScreen:
@@ -70,14 +37,14 @@ class PokemonMenuScreen:
 
         # Fuente para el texto
         self.font = pygame.font.Font(utils.load_font(), 65)
-        self.pokemon_text_surface = self.font.render("EQUIPO POKÉMON", True, (0, 0, 0))
+        self.pokemon_text_surface = self.font.render("POKÉMON TEAM", True, (0, 0, 0))
 
         # Crear el footer
-        self.footer = Footer(text="Atrás")
+        self.footer = Footer(text="Back")
         self.footer.footer_rect.topleft = (0, 575)
 
         # Crear minimenu
-        self.mini_menu = MiniMenu(position=(0, 0), size=(120, 100), options=["Datos", "Mover", "Atrás"])
+        self.mini_menu = MiniMenu(position=(0, 0), size=(120, 100), options=["Data", "Move", "Back"])
 
         self.moving_slot = None  # Variable para almacenar la primera caja seleccionada para mover.
 
@@ -240,19 +207,19 @@ class PokemonMenuScreen:
         """ Ejecuta la opción seleccionada en el mini menú. """
         option = self.mini_menu.options[self.mini_menu.selected_index]
 
-        if option == "Atrás":
+        if option == "Back":
             if self.slot_selected is None:
                 from game.screen.main_menu_screen import MainMenuScreen
                 return MainMenuScreen(self.player)
             else:
                 self.deselect_slot()
 
-        elif option == "Datos":
+        elif option == "Data":
             # Cambiar a la pantalla de datos del Pokémon seleccionado
             from game.screen.pokemon_data_screen import PokemonDataScreen
-            return PokemonDataScreen(self.player, self.pokemon_team[self.selected_index])
+            return PokemonDataScreen(self.player, self.pokemon_team, self.selected_index)
 
-        elif option == "Mover":
+        elif option == "Move":
             # Verificar si hay al menos dos Pokémon para intercambiar
             pokemon_count = sum(1 for pokemon in self.pokemon_team if pokemon is not None)
             if pokemon_count >= 2:
@@ -340,7 +307,13 @@ class PokemonMenuScreen:
         """
         Dibuja la pantalla del menú de Pokémon con los 6 slots.
         """
-        draw_custom_background(screen)
+        screen_width, screen_height = screen.get_size()
+        stripe_width = 100  # El ancho de la franja
+        draw_pokemon_background(screen, [(0, 0), (screen_width // 2 + 130, 0), (0, screen_height + 450)],
+                                [(screen_width // 2 + 130, 0),
+                                 (screen_width // 2 + 130 + stripe_width, 0),
+                                 (stripe_width, screen_height + 450), (0, screen_height + 450)],
+                                (380, 220), (400, 400))
 
         # Dibujar la imagen de la Pokébola
         pokeball_x = 20
@@ -361,10 +334,10 @@ class PokemonMenuScreen:
             selected_pokemon = self.pokemon_team[self.selected_index]
             if selected_pokemon.image:
                 screen_width, screen_height = screen.get_size()
-                max_image_size = (370, 370)
+                max_image_size = (360, 360)
                 pokemon_image = pygame.transform.scale(selected_pokemon.image, max_image_size)
-                x_position = (screen_width - pokemon_image.get_width()) // 2 + 180
-                y_position = (screen_height - pokemon_image.get_height()) // 2
+                x_position = (screen_width - pokemon_image.get_width()) // 2 + 200
+                y_position = (screen_height - pokemon_image.get_height()) // 2 + 50
                 screen.blit(pokemon_image, (x_position, y_position))
 
             # Dibujar el mini menú si una caja está seleccionada

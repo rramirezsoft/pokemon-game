@@ -1,6 +1,8 @@
 import pygame
 import pygame.gfxdraw
-import utils as utils
+import math
+
+from game.types import TypeIcons
 
 
 def draw_gradient(screen, start_color, end_color, rect):
@@ -247,8 +249,8 @@ class PokemonSlot:
                 self.rect.height * 0.1  # Ocupa el 9% de la altura de la caja
             )
             self.health_bar = HealthBar(
-                pokemon.current_stats['hp'],
-                pokemon.current_stats['hp'],
+                pokemon.max_stats['hp'],
+                pokemon.current_hp,
                 health_bar_rect,
                 selected=self.selected  # Pasar el estado de selección a HealthBar
             )
@@ -259,9 +261,16 @@ class PokemonSlot:
 
         :param screen: Superficie de pygame en la que se dibuja.
         """
-        # Cambiar color de fondo y texto dependiendo de la selección
-        bg_color = (0, 0, 0) if self.selected else (255, 255, 255)
-        text_color = (255, 255, 255) if self.selected else (0, 0, 0)
+        # Cambiar color de fondo y texto dependiendo de la selección y estado del Pokémon
+        if self.selected:
+            bg_color = (0, 0, 0)
+            text_color = (255, 255, 255)
+        elif self.pokemon and self.pokemon.is_fainted():
+            bg_color = (255, 0, 0)  # Rojo para Pokémon debilitado
+            text_color = (255, 255, 255)
+        else:
+            bg_color = (255, 255, 255)
+            text_color = (0, 0, 0)
 
         # Dibujar la caja con bordes redondeados
         pygame.draw.rect(screen, bg_color, self.rect, border_radius=40)
@@ -366,7 +375,7 @@ class MiniMenu:
         self.font_color = (0, 0, 0)  # Negro
         self.font_size = font_size
         self.font = pygame.font.Font(font_path, font_size)
-        self.options = options if options else ["Estadísticas", "Mover", "Atrás"]
+        self.options = options if options else ["Data", "Move", "Back"]
         self.border_radius = 10
         self.show = False
         self.selected_index = 0  # Índice de la opción seleccionada
@@ -429,3 +438,449 @@ class MiniMenu:
                 return i  # Retorna el índice de la opción clickeada
         return None  # No se hizo clic en ninguna opción
 
+
+def draw_pokemon_background(screen, triangle_points, stripe_points, pokeball_position, pokemon_size):
+    """
+    Dibuja un fondo personalizado para el menú de equipo Pokémon.
+
+    :param screen: Superficie de pygame en la que se dibuja el fondo.
+    :param triangle_points: Lista de puntos (x, y) para el triángulo rojo.
+    :param stripe_points: Lista de puntos (x, y) para la franja diagonal en rojo oscuro.
+    :param pokeball_position: Tupla (x, y) para la posición de la Pokéball.
+    :param pokemon_size: Tamaño de la pokeball
+    """
+    # Definir los colores
+    red_color = (227, 49, 63)
+    dark_red_color = (196, 40, 53)
+    soft_blue_gray = (233, 239, 255)
+
+    # Obtener el tamaño de la pantalla
+    screen.fill(soft_blue_gray)
+
+    # Dibujar el triángulo rojo brillante
+    pygame.draw.polygon(screen, red_color, triangle_points)
+
+    # Dibujar la franja diagonal en rojo oscuro que sea paralela al triángulo
+    pygame.draw.polygon(screen, dark_red_color, stripe_points)
+
+    # Dibujar la pokeball de fondo.
+    pokeball_image = pygame.image.load('../assets/img/pokemon_menu/info.png')
+
+    # Escalar la imagen de la Pokéball a 600px
+    pokeball_scaled = pygame.transform.scale(pokeball_image, pokemon_size)
+
+    # Girar la imagen de la Pokéball un poco (por ejemplo, 15 grados)
+    pokeball_rotated = pygame.transform.rotate(pokeball_scaled, 15)
+
+    # Obtener el rectángulo de la imagen rotada para centrarla correctamente
+    pokeball_rect = pokeball_rotated.get_rect()
+    pokeball_rect.topleft = pokeball_position
+
+    # Dibujar la imagen de la Pokéball
+    screen.blit(pokeball_rotated, pokeball_rect.topleft)
+
+
+def draw_interactive_arrow(screen, coords, color, action=None):
+    """
+    Dibuja un triángulo interactivo en la pantalla y ejecuta una acción si se hace clic en él.
+
+    :param screen: La pantalla en la que se va a dibujar.
+    :param coords: Coordenadas del triángulo (una lista de tres tuplas).
+    :param color: El color del triángulo.
+    :param action: Función que se ejecuta cuando se hace clic en el triángulo.
+    """
+    # Dibuja el triángulo
+    pygame.draw.polygon(screen, color, coords)
+
+    # Define el área rectangular que envuelve el triángulo
+    min_x = min([x for x, y in coords])
+    min_y = min([y for x, y in coords])
+    max_x = max([x for x, y in coords])
+    max_y = max([y for x, y in coords])
+    arrow_rect = pygame.Rect(min_x, min_y, max_x - min_x, max_y - min_y)
+
+    # Devolvemos el rectángulo para usarlo en la detección de clics
+    return arrow_rect
+
+
+def draw_interactive_icon(screen, image_path, image_size, coords, action=None):
+    """
+        Pinta un icono interactivo para ver estadisticas, movimientos, info...
+
+        :param screen: La pantalla en la que se va a dibujar.
+        :param image_path: Ruta del icono.
+        :param image_size: Tamaño de la imagen
+        :param coords: Coordenadas del icono (una lista de tres tuplas).
+        :param action: Función que se ejecuta cuando se hace clic en el icono.
+        """
+
+    icon = pygame.image.load(image_path)
+    icon = pygame.transform.scale(icon, image_size)
+
+    screen.blit(icon, coords, action)
+
+
+def draw_info_tab(screen, rect, font_size, pokemon, player):
+    """
+    :param screen: La pantalla en la que se va a dibujar.
+    :param rect: El rectángulo en el que se dibujará el recuadro.
+    :param font_size: Tamaño de la fuente del texto.
+    :param pokemon: Objeto Pokémon que contiene la información a mostrar.
+    :param player: Objeto Player para mostrar el nombre del entrenador del pokemon.
+    """
+    light_gray = (230, 230, 230)
+    dark_gray = (200, 200, 200)
+    text_color = (0, 0, 0)
+
+    # Dimensiones del recuadro
+    x, y, width, height = rect
+
+    # Sombra en el lado derecho y abajo
+    shadow_color = (100, 100, 100, 30)  # Color sombra con transparencia
+    shadow_offset = 4  # Desplazamiento de la sombra
+
+    # Crear una superficie con canal alfa para la sombra
+    shadow_surface = pygame.Surface((width + shadow_offset, height + shadow_offset), pygame.SRCALPHA)
+
+    # Dibujar la sombra (rectángulo desplazado)
+    pygame.draw.rect(shadow_surface, shadow_color, (shadow_offset, shadow_offset, width, height))
+
+    # Dibujar la sombra en la pantalla
+    screen.blit(shadow_surface, (x, y))
+
+    pygame.draw.rect(screen, (255, 255, 255), rect)
+
+    x, y, width, height = rect
+
+    # Dibuja la mitad izquierda del recuadro en gris claro
+    pygame.draw.rect(screen, light_gray, (x, y, width // 2, height))
+
+    # Dibuja las líneas grises horizontales sobre el recuadro
+    section_height = height / 6
+    for i in range(1, 6):
+        pygame.draw.line(screen, dark_gray, (x, y + i * section_height), (x + width, y + i * section_height), 2)
+
+    font = pygame.font.Font("../assets/fonts/pokemon.ttf", font_size)
+
+    # Contenido de las celdas
+    labels = [
+        "Name",
+        "Type",
+        "Trainer",
+        "ID No.",
+        "Current no. of Exp. Points",
+        "Points needed to level up"
+    ]
+
+    # Renderizar el texto en la mitad izquierda del recuadro
+    for i, label in enumerate(labels):
+        text_surface = font.render(label, True, text_color)
+        text_rect = text_surface.get_rect()
+        text_rect.centerx = x + width // 4  # Centro horizontalmente en la mitad izquierda
+        text_rect.centery = y + (i + 0.5) * section_height  # Centro verticalmente en la sección correspondiente
+        screen.blit(text_surface, text_rect)
+
+    # Renderizar el contenido en la mitad derecha del recuadro
+    data = [
+        pokemon.name,
+        pokemon.types,  # Esto es para las imágenes de tipos
+        player.name,
+        pokemon.id,  # Para el ID No. puedes añadir un valor si lo tienes
+        pokemon.experience,
+        pokemon.experience_to_next_level
+    ]
+
+    icon_manager = TypeIcons(icon_size=(75, 30))
+    for i, info in enumerate(data):
+        if i == 1:  # Para el tipo del Pokémon
+            # Mostrar imágenes en lugar de texto para el tipo
+            types = pokemon.types
+
+            # Calcula la posición inicial para dibujar las imágenes
+            icon_x = x + width // 2 + 10
+            icon_y = y + (i + 0.5) * section_height - 16  # Ajusta según el tamaño de tus imágenes
+
+            for pokemon_type in types:
+                icon = icon_manager.get_icon(pokemon_type)
+                if icon:
+                    screen.blit(icon, (icon_x, icon_y))
+                    icon_x += icon.get_width() + 5  # Espacio entre iconos
+        else:
+            text_surface = font.render(str(info), True, text_color)
+            text_rect = text_surface.get_rect()
+            text_rect.left = x + width // 2 + 10  # Posición desde el borde izquierdo de la mitad derecha
+            text_rect.centery = y + (i + 0.5) * section_height  # Centro verticalmente en la sección correspondiente
+            screen.blit(text_surface, text_rect)
+
+
+def draw_stats_tb(screen, rect, font_size, pokemon):
+    """
+    Dibuja una gráfica hexagonal de las estadísticas del Pokémon.
+
+    :param screen: La pantalla en la que se va a dibujar.
+    :param rect: El rectángulo en el que se dibujará el gráfico.
+    :param font_size: Tamaño de la fuente del texto.
+    :param pokemon: Objeto Pokémon que contiene las estadísticas.
+    """
+
+    # Colores
+    base_color = (200, 200, 200)
+    stat_color = (0, 0, 255)
+    text_color = (0, 0, 0)
+
+    # Dimensiones del recuadro
+    x, y, width, height = rect
+
+    # Sombra en el lado derecho y abajo
+    shadow_color = (100, 100, 100, 30)  # Color sombra con transparencia
+    shadow_offset = 4  # Desplazamiento de la sombra
+
+    # Crear una superficie con canal alfa para la sombra
+    shadow_surface = pygame.Surface((width + shadow_offset, height + shadow_offset), pygame.SRCALPHA)
+
+    # Dibujar la sombra (rectángulo desplazado)
+    pygame.draw.rect(shadow_surface, shadow_color, (shadow_offset, shadow_offset, width, height))
+
+    # Dibujar la sombra en la pantalla
+    screen.blit(shadow_surface, (x, y))
+
+    pygame.draw.rect(screen, (255, 255, 255), rect)
+
+    # Coordenadas y dimensiones del rectángulo
+    x, y, width, height = rect
+
+    # Centro del hexágono
+    center_x = x + width // 2
+    center_y = y + height // 2
+    radius = min(width, height) // 3  # Radio del hexágono
+
+    # Estadísticas del Pokémon
+    stats = {
+        "HP": pokemon.current_stats["hp"],
+        "Attack": pokemon.current_stats["attack"],
+        "Defense": pokemon.current_stats["defense"],
+        "Speed": pokemon.current_stats["speed"],
+        "Sp. Defense": pokemon.current_stats["special-defense"],
+        "Sp. Attack": pokemon.current_stats["special-attack"]
+    }
+
+    max_stat = 400  # Valor máximo de cada estadística
+
+    # Nombres de las estadísticas
+    stat_labels = list(stats.keys())
+
+    # Calcular las posiciones de los vértices del hexágono base
+    def get_vertex_positions(center_x, center_y, radius, offset=0):
+        positions = []
+        for i in range(6):
+            angle_deg = 60 * i - 90 + offset  # Rotamos 90 grados para que el vértice superior sea HP
+            angle_rad = math.radians(angle_deg)
+            vertex_x = center_x + radius * math.cos(angle_rad)
+            vertex_y = center_y + radius * math.sin(angle_rad)
+            positions.append((vertex_x, vertex_y))
+        return positions
+
+    # Dibujar el hexágono base (grisáceo) - Representa el máximo de las estadísticas
+    base_vertices = get_vertex_positions(center_x, center_y, radius)
+    pygame.draw.polygon(screen, base_color, base_vertices, 3)  # Grosor 3 para el borde
+
+    # Dibujar el hexágono de estadísticas (azul)
+    stat_vertices = []
+    for i, (stat, value) in enumerate(stats.items()):
+        ratio = value / max_stat  # Proporción respecto al valor máximo
+        stat_vertices.append((
+            center_x + radius * ratio * math.cos(math.radians(60 * i - 90)),
+            center_y + radius * ratio * math.sin(math.radians(60 * i - 90))
+        ))
+    pygame.draw.polygon(screen, stat_color, stat_vertices, 0)  # Sin borde, relleno
+
+    # Dibujar líneas que separan los segmentos del hexágono
+    for vertex in base_vertices:
+        pygame.draw.line(screen, base_color, (center_x, center_y), vertex, 2)
+
+    # Renderizar el texto de las estadísticas en los vértices (alejarlo ligeramente)
+    font = pygame.font.Font("../assets/fonts/pokemon.ttf", font_size)
+    label_offset = 30  # Distancia a la que se moverán las etiquetas de los vértices
+    value_offset = 20  # Ajusta esto para controlar la separación entre el nombre y el valor
+
+    for i, (label, vertex) in enumerate(zip(stat_labels, base_vertices)):
+        # Mover el texto de la estadística un poco hacia afuera
+        angle_deg = 60 * i - 90  # Ángulo de cada vértice
+        angle_rad = math.radians(angle_deg)
+
+        # Posicionar el nombre de la estadística
+        label_x = vertex[0] + label_offset * math.cos(angle_rad)
+        label_y = vertex[1] + label_offset * math.sin(angle_rad)
+
+        # Dibujar el nombre de la estadística
+        text_surface = font.render(label, True, text_color)
+        text_rect = text_surface.get_rect(center=(label_x, label_y))
+        # Calcular la posición del valor de la estadística
+        value_x = label_x
+        if i >= 3:
+            value_y = label_y - value_offset
+        else:
+            value_y = label_y + value_offset
+
+        # Dibujar el nombre de la estadística en la posición calculada
+        screen.blit(text_surface, text_rect)
+
+        # Dibujar el valor de la estadística debajo del nombre
+        stat_value_surface = font.render(str(stats[label]), True, text_color)
+        stat_value_rect = stat_value_surface.get_rect(center=(value_x, value_y))
+        screen.blit(stat_value_surface, stat_value_rect)
+
+
+def draw_moves_tab(screen, pokemon, position, font_size, selected_move_index=None,
+                   box_color=(255, 255, 255), text_color=(0, 0, 0), gray_color=(84, 84, 84), selected_color=(0, 0, 0)):
+    """
+    Dibuja la pestaña de movimientos del Pokémon en la pantalla.
+
+    :param screen: La superficie en la que dibujar.
+    :param pokemon: El objeto Pokémon que contiene los movimientos.
+    :param position: La posición en la pantalla donde empezar a dibujar.
+    :param font_size: Tamaño de la fuente para el texto de los movimientos.
+    :param selected_move_index: El índice del movimiento seleccionado (si lo hay).
+    :param box_color: Color de fondo de las cajas de movimientos.
+    :param text_color: Color del texto.
+    :param gray_color: Color de la sección gris en la parte derecha de la caja.
+    :param selected_color: Color de fondo para el movimiento seleccionado.
+    :return: Una lista de rectángulos de los movimientos para la detección de clics.
+    """
+    box_width, box_height = 400, 50
+    padding = 4
+    gray_section_width = 80
+    border_radius = 40
+    x, y = position
+
+    moves = pokemon.moves
+    move_rects = []
+
+    # Cargar los iconos de tipos de movimientos
+    icon_manager = TypeIcons(icon_size=(75, 30))  # Asegúrate de que el tamaño sea el adecuado
+
+    for i, move in enumerate(moves):
+        # Usa el color de selección si el movimiento está seleccionado, de lo contrario, usa el color por defecto.
+        current_box_color = selected_color if i == selected_move_index else box_color
+        current_text_color = (255, 255, 255) if i == selected_move_index else text_color  # Blanco si está seleccionado
+
+        # Dibuja el rectángulo del movimiento con el color correspondiente
+        box_rect = pygame.Rect(x, y + i * (box_height + padding), box_width, box_height)
+        gray_section_rect = pygame.Rect(box_rect.right - gray_section_width, box_rect.top, gray_section_width,
+                                        box_height)
+
+        # Dibuja los rectángulos
+        pygame.draw.rect(screen, current_box_color, box_rect, border_radius=border_radius)
+        pygame.draw.rect(screen, gray_color, gray_section_rect, border_radius=border_radius)
+
+        # Dibuja el pequeño polígono gris en la sección gris
+        small_polygon_width = gray_section_width * 0.6
+        small_polygon_height = box_height
+        offset = 20
+        top_left = (
+        gray_section_rect.left + (gray_section_width - small_polygon_width) / 2 - offset, gray_section_rect.top)
+        top_right = (top_left[0] + small_polygon_width - 10, top_left[1])
+        bottom_right = (top_left[0] + small_polygon_width - 10, gray_section_rect.bottom)
+        bottom_left = (top_left[0] - gray_section_width * 0.3 + 4, gray_section_rect.bottom)
+        small_polygon_points = [top_left, top_right, bottom_right, bottom_left]
+        pygame.draw.polygon(screen, gray_color, small_polygon_points)
+
+        # Renderiza el nombre del movimiento
+        font = pygame.font.Font("../assets/fonts/pokemon.ttf", font_size)
+        move_text = move['name']
+        pp_text = "{}/{}".format(move['pp'], move['current_pp'])
+        text_surface = font.render(move_text, True, current_text_color)
+        pp_surface = font.render(pp_text, True, (255, 255, 255))
+
+        text_rect = text_surface.get_rect(topleft=(box_rect.left + 10, box_rect.top
+                                                   + (box_height - text_surface.get_height()) // 2))
+
+        pp_rect = pp_surface.get_rect(topright=(box_rect.right - 25, box_rect.top
+                                                + (box_height - pp_surface.get_height()) // 2))
+
+        # Agregar icono del tipo de movimiento
+        type_icon = icon_manager.get_icon(move['type'])  # Asegúrate de que 'type' esté en 'move'
+        if type_icon:
+            icon_rect = pygame.Rect(box_rect.width // 2 + 35, box_rect.top + (box_height - type_icon.get_height()) // 2,
+                                    type_icon.get_width(), type_icon.get_height())
+            screen.blit(type_icon, icon_rect)
+
+        screen.blit(text_surface, text_rect)
+        screen.blit(pp_surface, pp_rect)
+        move_rects.append(box_rect)
+
+    return move_rects
+
+
+def draw_rectangles(screen, start_x, start_y, rect_width, rect_height, padding, border_radius, rect_color, font_size,
+                    text_values=None, left_half_color=(220, 220, 220)):
+    """
+    Dibuja un conjunto de rectángulos con un borde redondeado en la pantalla.
+
+    :param screen: La superficie en la que dibujar.
+    :param start_x: La posición X inicial para el primer rectángulo.
+    :param start_y: La posición Y inicial para el primer rectángulo.
+    :param rect_width: El ancho de cada rectángulo.
+    :param rect_height: La altura de cada rectángulo.
+    :param padding: El espacio entre los rectángulos.
+    :param border_radius: El radio de redondeo de las esquinas.
+    :param rect_color: El color de fondo de los rectángulos.
+    :param text_values: Un diccionario con los valores de texto a mostrar dentro de los rectángulos.
+    :param font_size: Tamaño de la fuente a utilizar para el texto.
+    :param left_half_color: Color de la mitad izquierda del recuadro.
+
+    """
+    current_y = start_y
+
+    for i in range(len(text_values)):
+        # Calcular la posición y el tamaño del rectángulo
+        rect = pygame.Rect(start_x, current_y, rect_width, rect_height)
+
+        # Dibujar el rectángulo completo blanco
+        pygame.draw.rect(screen, rect_color, rect, border_radius=border_radius)
+
+        # Dibujar la mitad izquierda del rectángulo color grisáceo
+        half_rect = pygame.Rect(start_x, current_y, rect_width // 2, rect_height)
+        pygame.draw.rect(screen, left_half_color, half_rect, border_radius=border_radius)
+
+        # Avanzar la posición Y para el siguiente rectángulo
+        current_y += rect_height + padding
+
+    # Dibujar el texto en los rectángulos
+    font = pygame.font.Font("../assets/fonts/pokemon.ttf", font_size)
+    if text_values:
+        draw_text_in_rect(screen, (start_x, start_y), (rect_height + padding), text_values, font, rect_width)
+
+
+def draw_text_in_rect(screen, position, line_height, text_values, font, rect_width):
+    """
+    Dibuja el label en la parte izquierda y el valor en la parte derecha del rectángulo.
+
+    :param screen: La superficie en la que dibujar.
+    :param position: La posición (x, y) en la pantalla donde empezar a dibujar el texto.
+    :param line_height: Espaciado entre líneas.
+    :param text_values: Un diccionario con los valores de texto a mostrar.
+    :param font: La fuente a utilizar para el texto.
+    :param rect_width: El ancho del rectángulo, para saber dónde dividir la mitad.
+    """
+    if not isinstance(text_values, dict):
+        raise TypeError("Expected text_values to be a dictionary, got {}".format(type(text_values)))
+
+    for j, (label, value) in enumerate(text_values.items()):
+        # Preparar el texto para el label (mitad izquierda, parte gris)
+        label_surface = font.render(f"{label}", True, (0, 0, 0))
+        label_rect = label_surface.get_rect(
+            center=(position[0] + rect_width // 4, position[1] + j * line_height + line_height // 2)
+        )
+
+        # Preparar el texto para el value (mitad derecha, parte blanca)
+        value_surface = font.render(f"{value}", True, (0, 0, 0))
+        value_rect = value_surface.get_rect(
+            center=(position[0] + 3 * rect_width // 4, position[1] + j * line_height + line_height // 2)
+        )
+
+        # Dibujar el label en la mitad izquierda (gris)
+        screen.blit(label_surface, label_rect)
+
+        # Dibujar el value en la mitad derecha (blanco)
+        screen.blit(value_surface, value_rect)
