@@ -4,7 +4,6 @@ import game.utils as utils
 import game.ui as ui
 from game.dialogue_manager import DialogueManager
 from game.player import Player
-from game.pokemon import create_pokemon
 from game.screen.main_menu_screen import MainMenuScreen
 
 
@@ -90,7 +89,7 @@ class OakIntroScreen:
         if not self.starter_pokemon:
             for name, (_, rect) in self.pokemons.items():
                 if rect.collidepoint(mouse_pos):
-                    self.select_pokemon(name, {"Bulbasaur": "Planta", "Charmander": "Fuego", "Squirtle": "Agua"}[name])
+                    self.select_pokemon(name, {"Bulbasaur": "grass-type", "Charmander": "fire-type", "Squirtle": "water-type"}[name])
 
     def select_pokemon(self, name, pokemon_type):
         """Selecciona un Pokémon y actualiza el estado de diálogo."""
@@ -142,7 +141,7 @@ class OakIntroScreen:
     def draw_dialog_text(self, screen, box_position):
         """Dibuja el texto dentro del cuadro de diálogo."""
         if self.dialog_stage == 'name_input':
-            ui.draw_text_in_dialog_box(screen, f"Escribe tu nombre: {self.player_name}", self.font, box_position)
+            ui.draw_text_in_dialog_box(screen, f"Please write your name: {self.player_name}", self.font, box_position)
         elif self.dialog_stage == 'name_prompt':
             ui.draw_text_in_dialog_box(screen, self.get_dialogue_with_placeholders
             ('name_prompt', {"player_name": self.player_name})[self.current_line_index], self.font, box_position)

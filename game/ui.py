@@ -778,7 +778,7 @@ def draw_moves_tab(screen, pokemon, position, font_size, selected_move_index=Non
         small_polygon_height = box_height
         offset = 20
         top_left = (
-        gray_section_rect.left + (gray_section_width - small_polygon_width) / 2 - offset, gray_section_rect.top)
+            gray_section_rect.left + (gray_section_width - small_polygon_width) / 2 - offset, gray_section_rect.top)
         top_right = (top_left[0] + small_polygon_width - 10, top_left[1])
         bottom_right = (top_left[0] + small_polygon_width - 10, gray_section_rect.bottom)
         bottom_left = (top_left[0] - gray_section_width * 0.3 + 4, gray_section_rect.bottom)
