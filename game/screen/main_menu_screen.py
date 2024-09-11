@@ -2,6 +2,7 @@ import pygame
 from game import utils
 from game.ui import Button
 from game.screen.pokemon_menu_screen import PokemonMenuScreen
+from game.sounds import SoundManager
 
 
 class MainMenuScreen:
@@ -38,6 +39,10 @@ class MainMenuScreen:
             "save": Button("Save", (280, 440, 150, 100), self.font, self.button_images["save"]),
         }
 
+        # Música
+        self.sound_manager = SoundManager()
+        self.sound_manager.play_random_menu_music()
+
     def handle_events(self, event):
         """Maneja los eventos del menú principal."""
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -45,6 +50,8 @@ class MainMenuScreen:
             for button_name, button in self.buttons.items():
                 if button.is_clicked(mouse_pos):
                     return self.handle_button_click(button_name)
+        elif event.type == self.sound_manager.MUSIC_END_EVENT:
+            self.sound_manager.play_random_menu_music()
         return self
 
     def handle_button_click(self, button_name):

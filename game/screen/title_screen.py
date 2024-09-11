@@ -1,6 +1,7 @@
 import pygame
 from game.utils import load_image, load_font, render_text
 from game.screen.oak_intro_screen import OakIntroScreen
+from game.sounds import SoundManager
 
 
 class TitleScreen:
@@ -15,9 +16,14 @@ class TitleScreen:
         self.blink_time = 0
         self.blink_interval = 500
 
+        # Música
+        self.sound_manager = SoundManager()
+        self.sound_manager.play_music("opening")
+
     def handle_events(self, event):
         """Maneja los eventos del teclado."""
         if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+            self.sound_manager.stop_music()
             return OakIntroScreen()  # Cambia a la pantalla para elegir nombre
         return self
 

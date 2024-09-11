@@ -5,6 +5,7 @@ import game.ui as ui
 from game.dialogue_manager import DialogueManager
 from game.player import Player
 from game.screen.main_menu_screen import MainMenuScreen
+from game.sounds import SoundManager
 
 
 class OakIntroScreen:
@@ -44,6 +45,10 @@ class OakIntroScreen:
         self.oak_x, self.oak_y, self.oak_target_x = 400, 250, 500
         self.oak_speed = 2
 
+        # Música
+        self.sound_manager = SoundManager()
+        self.sound_manager.play_music("oak")
+
     def handle_events(self, event):
         """Maneja los eventos del teclado y mouse."""
         if event.type == pygame.KEYDOWN:
@@ -81,6 +86,7 @@ class OakIntroScreen:
 
             self.dialog_stage, self.current_line_index = 'confirm_starter', 0
         elif self.dialog_stage == 'confirm_starter':
+            self.sound_manager.stop_music()
             return MainMenuScreen(self.player)
         return self
 
@@ -89,7 +95,8 @@ class OakIntroScreen:
         if not self.starter_pokemon:
             for name, (_, rect) in self.pokemons.items():
                 if rect.collidepoint(mouse_pos):
-                    self.select_pokemon(name, {"Bulbasaur": "grass-type", "Charmander": "fire-type", "Squirtle": "water-type"}[name])
+                    self.select_pokemon(name, {"Bulbasaur": "grass-type", "Charmander": "fire-type",
+                                               "Squirtle": "water-type"}[name])
 
     def select_pokemon(self, name, pokemon_type):
         """Selecciona un Pokémon y actualiza el estado de diálogo."""
