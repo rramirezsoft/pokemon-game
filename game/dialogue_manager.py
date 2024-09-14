@@ -1,4 +1,6 @@
 import json
+import pygame
+import ui
 
 
 class DialogueManager:
@@ -26,3 +28,51 @@ class DialogueManager:
             return self.current_dialogue[key]
         else:
             raise ValueError(f"Diálogo con clave '{key}' no encontrado en el contexto '{self.current_context}'.")
+
+
+class TextDisplayManager:
+    def __init__(self, font, dialogue_speed=15):
+        self.font = font
+        self.dialogue_speed = dialogue_speed
+        self.current_text = ""
+        self.displayed_text = ""
+        self.last_update_time = pygame.time.get_ticks()
+        self.current_index = 0
+        self.dialogue_complete = False
+
+    def set_text(self, text):
+        self.current_text = text
+        self.displayed_text = ""
+        self.current_index = 0
+        self.dialogue_complete = False
+        self.last_update_time = pygame.time.get_ticks()
+
+    def update(self):
+        """Actualiza el texto mostrado, carácter por carácter."""
+        if not self.dialogue_complete:
+            current_time = pygame.time.get_ticks()
+            if current_time - self.last_update_time > self.dialogue_speed:
+                self.last_update_time = current_time
+                self.current_index += 1
+                self.displayed_text = self.current_text[:self.current_index]
+
+                # Verifica si todo el texto ya ha sido mostrado
+                if self.current_index >= len(self.current_text):
+                    self.dialogue_complete = True
+
+    def draw(self, screen, box_position, box_width=780, box_height=150, padding=20, line_spacing=10,
+             text_color=(0, 0, 0), vertical_offset=-15):
+        """Dibuja el texto mostrado dentro del cuadro de diálogo, respetando el tamaño y alineación."""
+        ui.draw_text_in_dialog_box(screen, self.displayed_text, self.font, box_position,
+                                   box_width=box_width, box_height=box_height, text_color=text_color,
+                                   padding=padding, line_spacing=line_spacing, vertical_offset=vertical_offset)
+
+    def is_dialogue_complete(self):
+        """Retorna True si el texto ya ha sido completamente mostrado."""
+        return self.dialogue_complete
+
+    def complete_text(self):
+        """Marca el diálogo como completo e inmediatamente muestra todo el texto."""
+        self.displayed_text = self.current_text
+        self.dialogue_complete = True
+

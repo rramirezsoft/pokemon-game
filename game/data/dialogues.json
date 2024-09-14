@@ -11,9 +11,6 @@
             "inhabited by creatures called POKEMON! For some people, POKEMON are pets. Others use them for fights. Myself...",
             "I study POKEMON as a profession. First, what is your name? ..."
         ],
-        "name_input": [
-        ""
-        ],
         "name_prompt": [
             "Oak : Right! So your name is {player_name}! Your very own POKÉMON legend is about to unfold!",
             "A world of dreams and adventures with POKÉMON awaits! Let's go!"
