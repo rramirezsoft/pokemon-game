@@ -31,7 +31,7 @@ class DialogueManager:
 
 
 class TextDisplayManager:
-    def __init__(self, font, dialogue_speed=15):
+    def __init__(self, font, dialogue_speed=1):
         self.font = font
         self.dialogue_speed = dialogue_speed
         self.current_text = ""

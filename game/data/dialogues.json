@@ -17,7 +17,7 @@
         ],
         "info_starters": [
              "Now, I’ll show you the POKÉMON you can choose from. These are the three POKÉMON starters!",
-            "One is fire, another is grass, and the last one is water. Pick the one you like best!"
+            "First is grass, second is fire, and the last one is water. Pick the one you like best!"
         ],
         "select_starter": [
             "Do you want {pokemon_name}, the {pokemon_type} POKÉMON?"

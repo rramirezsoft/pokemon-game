@@ -140,7 +140,6 @@ def draw_text_in_dialog_box(screen, text, font, position, box_width=780, box_hei
         screen.blit(text_surface, text_rect)
 
 
-
 class HealthBar:
     def __init__(self, max_hp, current_hp, rect,
                  text_color=(0, 0, 0), font_size=20, bar_color=(0, 255, 0),
