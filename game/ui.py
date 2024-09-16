@@ -947,47 +947,56 @@ def draw_text_in_rect(screen, position, line_height, text_values, font, rect_wid
         screen.blit(value_surface, value_rect)
 
 
-def draw_combat_pokemon_status_box(screen, pokemon, position, is_player_pokemon=False):
+def draw_combat_pokemon_status_box(screen, pokemon, position, is_player_pokemon, box_width=250, box_height=80):
     """
-    Dibuja la caja de estado del Pokémon, mostrando su nombre, nivel, barra de vida, PS y barra de experiencia.
+    Dibuja la caja de información de un Pokémon, incluyendo nombre, nivel, HP y barra de experiencia.
     """
-    # Tamaño y colores de la caja de estado
-    box_width = 300
-    box_height = 100
-    box_color = (255, 255, 255)  # Fondo blanco
-    border_color = (0, 0, 0)  # Borde negro
-    text_color = (0, 0, 0)  # Texto negro
-    health_bar_color = (50, 205, 50)  # Verde para la barra de vida
-    exp_bar_color = (0, 191, 255)  # Azul para la barra de experiencia
+    # Colores
+    white = (255, 255, 255)
+    black = (0, 0, 0)
+    green = (34, 139, 34)
+    red = (255, 0, 0)
+    blue = (0, 0, 255)
 
-    # Fuente
-    font = pygame.font.Font(None, 28)
-    small_font = pygame.font.Font(None, 22)
+    # Dibujar el rectángulo de la caja
+    pygame.draw.rect(screen, white, (*position, box_width, box_height))
+    pygame.draw.rect(screen, black, (*position, box_width, box_height), 2)  # Borde negro
 
-    # Dibuja el fondo de la caja
-    pygame.draw.rect(screen, box_color, (*position, box_width, box_height))
-    pygame.draw.rect(screen, border_color, (*position, box_width, box_height), 2)
+    # Cargar la fuente
+    font = pygame.font.Font(None, 30)
 
-    # Dibuja el nombre y nivel del Pokémon
-    name_text = font.render(pokemon.name, True, text_color)
-    level_text = font.render(f"Lv. {pokemon.level}", True, text_color)
+    # Dibujar el nombre del Pokémon y nivel
+    name_text = font.render(f"{pokemon.name}", True, black)
+    level_text = font.render(f"Lv: {pokemon.level}", True, black)
     screen.blit(name_text, (position[0] + 10, position[1] + 10))
-    screen.blit(level_text, (position[0] + box_width - 70, position[1] + 10))
+    screen.blit(level_text, (position[0] + box_width - 60, position[1] + 10))
 
-    # Dibuja la barra de vida
-    max_health_width = 200  # Ancho máximo de la barra de vida
-    current_health_width = int((pokemon.current_hp / pokemon.max_hp) * max_health_width)
-    pygame.draw.rect(screen, health_bar_color, (position[0] + 10, position[1] + 50, current_health_width, 10))
-    pygame.draw.rect(screen, border_color, (position[0] + 10, position[1] + 50, max_health_width, 10), 2)
+    # Dibujar la barra de HP
+    hp_bar_position = (position[0] + 10, position[1] + 40)
+    hp_bar_width = box_width - 20
+    hp_bar_height = 10
 
-    # Si es el Pokémon del jugador, mostrar los PS numéricos y la barra de experiencia
+    # Porcentaje de HP actual
+    hp_percentage = pokemon.current_hp / pokemon.max_stats['hp']
+
+    # Dibujar la barra de fondo (roja) y la barra de HP (verde)
+    pygame.draw.rect(screen, red, (*hp_bar_position, hp_bar_width, hp_bar_height))  # Fondo HP (rojo)
+    pygame.draw.rect(screen, green,
+                     (*hp_bar_position, int(hp_bar_width * hp_percentage), hp_bar_height))  # HP actual (verde)
+
+    # Dibujar los PS actuales y máximos si es el Pokémon del jugador
     if is_player_pokemon:
-        # Mostrar los PS actuales y máximos
-        ps_text = small_font.render(f"{pokemon.current_hp}/{pokemon.max_hp}", True, text_color)
-        screen.blit(ps_text, (position[0] + max_health_width + 20, position[1] + 45))
+        hp_text = font.render(f"{pokemon.current_hp}/{pokemon.max_stats['hp']} PS", True, black)
+        screen.blit(hp_text, (position[0] + 10, position[1] + 55))
 
-        # Dibuja la barra de experiencia (sin números, solo la barra azul)
-        max_exp_width = 180
-        current_exp_width = int((pokemon.current_exp / pokemon.next_level_exp) * max_exp_width)
-        pygame.draw.rect(screen, exp_bar_color, (position[0] + 10, position[1] + 80, current_exp_width, 5))
-        pygame.draw.rect(screen, border_color, (position[0] + 10, position[1] + 80, max_exp_width, 5), 1)
+    # Dibujar la barra de experiencia (solo si es el Pokémon del jugador)
+    if is_player_pokemon:
+        exp_bar_position = (position[0] + 10, position[1] + 70)
+        exp_bar_width = box_width - 20
+        exp_bar_height = 5
+
+        # Porcentaje de experiencia actual
+        exp_percentage = pokemon.experience / pokemon.experience_to_next_level
+
+        # Dibujar la barra de experiencia
+        pygame.draw.rect(screen, blue, (*exp_bar_position, int(exp_bar_width * exp_percentage), exp_bar_height))

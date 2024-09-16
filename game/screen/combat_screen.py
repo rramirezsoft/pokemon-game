@@ -65,6 +65,7 @@ class CombatScreen:
 
     def draw(self, screen):
         """Dibuja la pantalla de combate."""
+        screen_width = pygame.display.get_surface().get_width()
         screen.blit(self.background_image, (0, 0))
 
         self.draw_pokemon(screen, self.player_current_pokemon, self.player_pokemon_pos,
@@ -73,8 +74,10 @@ class CombatScreen:
         self.draw_pokemon(screen, self.enemy_pokemon, self.enemy_pokemon_current_pos, self.enemy_pokemon_scale_factor)
 
         # Dibuja las cajas de estado (nombre, nivel, vida, etc.)
-        ui.draw_combat_pokemon_status_box(screen, self.player_current_pokemon, (50, 400), is_player_pokemon=True)
-        ui.draw_combat_pokemon_status_box(screen, self.enemy_pokemon, (500, 50), is_player_pokemon=False)
+        box_width = 250
+        ui.draw_combat_pokemon_status_box(screen, self.player_current_pokemon,
+                                          (screen_width - box_width-1, 300), is_player_pokemon=True)
+        ui.draw_combat_pokemon_status_box(screen, self.enemy_pokemon, (2, 50), is_player_pokemon=False)
 
         # Dibujar el recuadro para el texto
         ui.draw_dialog_box(screen)
