@@ -1,9 +1,7 @@
 {
     "combat": {
-        "encounter": "Te has encontrado con un {pokemon_enemy} salvaje!",
-        "faint": "¡El {pokemon_enemy} ha sido derrotado!",
-        "win": "¡Has ganado la batalla!",
-        "lose": "Has perdido la batalla. ¡Inténtalo de nuevo!"
+        "encounter": "A wild {pokemon_enemy} appeared!"
+
     },
     "professor": {
         "greeting": [

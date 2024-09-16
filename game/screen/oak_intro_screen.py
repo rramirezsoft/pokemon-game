@@ -184,10 +184,9 @@ class OakIntroScreen:
 
         if self.dialog_active:
             # Dibuja la caja de diálogo
-            box_position = (10, 440)
-            ui.draw_dialog_box(screen, position=box_position, border_color=(0, 0, 0),
-                               fill_color=(255, 255, 255), border_thickness=5, border_radius=20)
-            self.text_display_manager.draw(screen, box_position)
+            box_position = (4, 449)
+            ui.draw_dialog_box(screen)
+            self.text_display_manager.draw(screen)
 
         if self.show_starters:
             if self.show_confirmation:
@@ -202,37 +201,32 @@ class OakIntroScreen:
         if self.show_confirmation:
             # Caja de confirmación, colocada justo encima del cuadro de diálogo, alineada a la derecha con un margen
             # de 10px
-            confirmation_box_width = 120
+            confirmation_box_width = 140
             confirmation_box_height = 140
-            confirmation_box_x = screen.get_width() - confirmation_box_width - 10
-            confirmation_box_y = box_position[1] - confirmation_box_height - 3
+            confirmation_box_x = screen.get_width() - confirmation_box_width - 5
+            confirmation_box_y = box_position[1] - confirmation_box_height
 
             # Dibuja el cuadro de confirmación con el mismo estilo que la caja de diálogo
             ui.draw_dialog_box(screen, position=(confirmation_box_x, confirmation_box_y),
-                               box_width=confirmation_box_width, box_height=confirmation_box_height,
-                               border_color=(0, 0, 0), fill_color=(255, 255, 255),
-                               border_thickness=5, border_radius=20)
+                               box_width=confirmation_box_width, box_height=confirmation_box_height)
 
+            confirmation_font = pygame.font.Font(utils.load_font(), 35)
             # Texto "Yes" y "No"
-            yes_no_font = pygame.font.Font(utils.load_font(), 35)
-            yes_text = yes_no_font.render("Yes", True, (0, 0, 0))
-            no_text = yes_no_font.render("No", True, (0, 0, 0))
+            yes_text = confirmation_font.render("Yes", True, (0, 0, 0))
+            no_text = confirmation_font.render("No", True, (0, 0, 0))
 
             # Posiciones del texto "Yes" y "No"
-            yes_text_pos = (confirmation_box_x + 40, confirmation_box_y + 30)
-            no_text_pos = (confirmation_box_x + 40, confirmation_box_y + 80)
+            yes_text_pos = (confirmation_box_x + 50, confirmation_box_y + 25)
+            no_text_pos = (confirmation_box_x + 50, confirmation_box_y + 75)
 
             screen.blit(yes_text, yes_text_pos)
             screen.blit(no_text, no_text_pos)
 
             # Dibuja la flecha ">" al lado de la opción seleccionada
-            arrow_font = pygame.font.Font(utils.load_font(), 35)
-            arrow_text = arrow_font.render(">", True, (0, 0, 0))
+            arrow_text = confirmation_font.render(">", True, (0, 0, 0))
 
             # Mostrar la flecha a la izquierda de la opción seleccionada
             if self.selected_confirmation_option == 'yes':
                 screen.blit(arrow_text, (yes_text_pos[0] - 20, yes_text_pos[1]))
             else:
                 screen.blit(arrow_text, (no_text_pos[0] - 20, no_text_pos[1]))
-
-

@@ -71,27 +71,88 @@ class Button:
         self.is_hovered = self.rect.collidepoint(mouse_pos)
 
 
-def draw_dialog_box(screen, position, box_width=780, box_height=150, border_color=(0, 0, 0), border_thickness=5,
-                    fill_color=(255, 255, 255), border_radius=20):
+def draw_combat_background(screen, position=(0, 449), width=800, height=151, color=(232, 210, 218), border=3):
     """
-    Dibuja un cuadro de diálogo estilizado.
+    Dibuja un recuadro de fondo para el menú de combate.
+
+    :param screen: La superficie en la que dibujar el fondo.
+    :param position: Una tupla (x, y) que representa la posición del fondo.
+    :param width: Ancho del fondo.
+    :param height: Altura del fondo.
+    :param color: Color de relleno del fondo.
+    :param border: Grosor del borde (en este caso, para la línea negra superior).
+    """
+    x, y = position
+
+    # 1. Dibujar el fondo principal con el color de relleno
+    pygame.draw.rect(screen, color, (x, y, width, height))
+
+    # 2. Dibujar una línea gris en la parte superior del fondo (borde superior)
+    pygame.draw.line(screen, (80, 80, 80), (x, y), (x + width, y), border)
+
+    # 3. Dibujar una línea negra fina sobre la línea gris (parte superior) de 2 píxeles
+    pygame.draw.line(screen, (0, 0, 0), (x, y), (x + width, y), 2)
+
+
+def draw_dialog_box(screen, position=(4, 456), box_width=792, box_height=140,
+                    outer_border_color=(218, 165, 32),  # Dorado para el borde exterior
+                    inner_border_color=(75, 77, 76),  # Grisáceo para el borde interior
+                    border_thickness=2,  # Borde exterior fino negro
+                    inner_border_thickness=4,  # Borde dorado más fino
+                    side_inner_border_thickness=15,  # Grosor mayor a los lados del borde gris
+                    top_bottom_inner_border_thickness=5,  # Grosor menor arriba y abajo del borde gris
+                    fill_color=(255, 255, 255), outer_border_radius=5, inner_border_radius=3,
+                    inner_fill_radius=2):
+    """
+    Dibuja un cuadro de diálogo estilizado al estilo Pokémon Platino con bordes dorados y grisáceos.
 
     :param screen: La superficie en la que dibujar el cuadro de diálogo.
     :param position: Una tupla (x, y) que representa la posición del cuadro de diálogo.
     :param box_width: El ancho del cuadro de diálogo.
     :param box_height: La altura del cuadro de diálogo.
-    :param border_color: Color del borde del cuadro de diálogo.
-    :param border_thickness: Grosor del borde del cuadro de diálogo.
-    :param fill_color: Color de fondo del cuadro de diálogo.
-    :param border_radius: Radio de los bordes redondeados del cuadro de diálogo.
+    :param outer_border_color: Color del borde exterior (dorado).
+    :param inner_border_color: Color del borde interior (grisáceo).
+    :param border_thickness: Grosor del borde exterior (negro).
+    :param inner_border_thickness: Grosor del borde dorado.
+    :param side_inner_border_thickness: Grosor mayor en los lados del borde grisáceo.
+    :param top_bottom_inner_border_thickness: Grosor menor arriba y abajo del borde grisáceo.
+    :param fill_color: Color de fondo del cuadro de diálogo (blanco).
+    :param outer_border_radius: Radio de los bordes redondeados del borde exterior.
+    :param inner_border_radius: Radio de los bordes redondeados del borde interior.
+    :param inner_fill_radius: Radio del borde de la caja interna (muy sutil).
     """
     x, y = position
 
-    # Crear una superficie temporal para el cuadro de diálogo con bordes redondeados
+    # Crear la superficie para el cuadro de diálogo
     dialog_surface = pygame.Surface((box_width, box_height), pygame.SRCALPHA)
-    pygame.draw.rect(dialog_surface, fill_color, (0, 0, box_width, box_height), border_radius=border_radius)
-    pygame.draw.rect(dialog_surface, border_color, (0, 0, box_width, box_height), border_radius=border_radius,
-                     width=border_thickness)
+
+    # Dibujar el borde negro exterior muy sutil
+    pygame.draw.rect(dialog_surface, (0, 0, 0), (0, 0, box_width, box_height),
+                     border_radius=outer_border_radius, width=border_thickness)
+
+    # Dibujar el borde dorado justo dentro del negro
+    pygame.draw.rect(dialog_surface, outer_border_color,
+                     (border_thickness, border_thickness, box_width - 2 * border_thickness, box_height - 2 * border_thickness),
+                     border_radius=outer_border_radius, width=inner_border_thickness)
+
+    # Dibujar el borde grisáceo interior (más grueso a los lados, más delgado arriba y abajo)
+    inner_rect = pygame.Rect(
+        border_thickness + inner_border_thickness,  # Empieza después del borde negro y dorado
+        border_thickness + top_bottom_inner_border_thickness,  # Ajuste arriba
+        box_width - 2 * (border_thickness + inner_border_thickness),  # Ajustar el ancho
+        box_height - 2 * top_bottom_inner_border_thickness - 4
+    )
+    pygame.draw.rect(dialog_surface, inner_border_color, inner_rect,
+                     border_radius=inner_border_radius, width=side_inner_border_thickness)
+
+    # Dibujar el relleno blanco dentro del cuadro de diálogo (casi sin radius)
+    fill_rect = pygame.Rect(
+        border_thickness + inner_border_thickness + side_inner_border_thickness,  # Ajuste en los lados
+        border_thickness + top_bottom_inner_border_thickness + inner_border_thickness,  # Ajuste arriba
+        box_width - 2 * (border_thickness + inner_border_thickness + side_inner_border_thickness),  # Ajustar el ancho
+        box_height - 2 * (top_bottom_inner_border_thickness + inner_border_thickness + 3)
+    )
+    pygame.draw.rect(dialog_surface, fill_color, fill_rect, border_radius=inner_fill_radius)
 
     # Blit del cuadro de diálogo en la superficie principal
     screen.blit(dialog_surface, (x, y))
@@ -884,3 +945,49 @@ def draw_text_in_rect(screen, position, line_height, text_values, font, rect_wid
 
         # Dibujar el value en la mitad derecha (blanco)
         screen.blit(value_surface, value_rect)
+
+
+def draw_combat_pokemon_status_box(screen, pokemon, position, is_player_pokemon=False):
+    """
+    Dibuja la caja de estado del Pokémon, mostrando su nombre, nivel, barra de vida, PS y barra de experiencia.
+    """
+    # Tamaño y colores de la caja de estado
+    box_width = 300
+    box_height = 100
+    box_color = (255, 255, 255)  # Fondo blanco
+    border_color = (0, 0, 0)  # Borde negro
+    text_color = (0, 0, 0)  # Texto negro
+    health_bar_color = (50, 205, 50)  # Verde para la barra de vida
+    exp_bar_color = (0, 191, 255)  # Azul para la barra de experiencia
+
+    # Fuente
+    font = pygame.font.Font(None, 28)
+    small_font = pygame.font.Font(None, 22)
+
+    # Dibuja el fondo de la caja
+    pygame.draw.rect(screen, box_color, (*position, box_width, box_height))
+    pygame.draw.rect(screen, border_color, (*position, box_width, box_height), 2)
+
+    # Dibuja el nombre y nivel del Pokémon
+    name_text = font.render(pokemon.name, True, text_color)
+    level_text = font.render(f"Lv. {pokemon.level}", True, text_color)
+    screen.blit(name_text, (position[0] + 10, position[1] + 10))
+    screen.blit(level_text, (position[0] + box_width - 70, position[1] + 10))
+
+    # Dibuja la barra de vida
+    max_health_width = 200  # Ancho máximo de la barra de vida
+    current_health_width = int((pokemon.current_hp / pokemon.max_hp) * max_health_width)
+    pygame.draw.rect(screen, health_bar_color, (position[0] + 10, position[1] + 50, current_health_width, 10))
+    pygame.draw.rect(screen, border_color, (position[0] + 10, position[1] + 50, max_health_width, 10), 2)
+
+    # Si es el Pokémon del jugador, mostrar los PS numéricos y la barra de experiencia
+    if is_player_pokemon:
+        # Mostrar los PS actuales y máximos
+        ps_text = small_font.render(f"{pokemon.current_hp}/{pokemon.max_hp}", True, text_color)
+        screen.blit(ps_text, (position[0] + max_health_width + 20, position[1] + 45))
+
+        # Dibuja la barra de experiencia (sin números, solo la barra azul)
+        max_exp_width = 180
+        current_exp_width = int((pokemon.current_exp / pokemon.next_level_exp) * max_exp_width)
+        pygame.draw.rect(screen, exp_bar_color, (position[0] + 10, position[1] + 80, current_exp_width, 5))
+        pygame.draw.rect(screen, border_color, (position[0] + 10, position[1] + 80, max_exp_width, 5), 1)

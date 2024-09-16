@@ -60,7 +60,7 @@ class TextDisplayManager:
                 if self.current_index >= len(self.current_text):
                     self.dialogue_complete = True
 
-    def draw(self, screen, box_position, box_width=780, box_height=150, padding=20, line_spacing=10,
+    def draw(self, screen, box_position=(12, 449), box_width=780, box_height=150, padding=20, line_spacing=10,
              text_color=(0, 0, 0), vertical_offset=-15):
         """Dibuja el texto mostrado dentro del cuadro de diálogo, respetando el tamaño y alineación."""
         ui.draw_text_in_dialog_box(screen, self.displayed_text, self.font, box_position,

@@ -1,8 +1,11 @@
 import pygame
 from game import utils
+from game.screen.battle_transition_screen import BattleTransitionScreen
+from game.screen.combat_screen import CombatScreen
 from game.ui import Button
 from game.screen.pokemon_menu_screen import PokemonMenuScreen
 from game.sounds import SoundManager
+import game.pokemon as pokemon
 
 
 class MainMenuScreen:
@@ -57,7 +60,9 @@ class MainMenuScreen:
     def handle_button_click(self, button_name):
         """Acciones cuando se hace clic en un botón."""
         if button_name == "fight":
-            print("BATALLA")
+            pokemon_date_list = pokemon.load_pokemon_data()
+            enemy_pokemon = pokemon.create_random_pokemon(pokemon_date_list)
+            return BattleTransitionScreen(self.player, enemy_pokemon)
         elif button_name == "pokemon":
             return PokemonMenuScreen(self.player)
         elif button_name == "bag":
