@@ -4,7 +4,7 @@ from game.screen.combat_screen import CombatScreen
 from game.sounds import SoundManager
 
 
-class BattleTransitionScreen:
+class CombatTransitionScreen:
     def __init__(self, player, enemy_pokemon):
         self.player = player
         self.enemy_pokemon = enemy_pokemon

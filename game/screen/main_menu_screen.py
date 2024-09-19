@@ -1,6 +1,6 @@
 import pygame
 from game import utils
-from game.screen.battle_transition_screen import BattleTransitionScreen
+from game.screen.combat_transition_screen import CombatTransitionScreen
 from game.screen.combat_screen import CombatScreen
 from game.ui import Button
 from game.screen.pokemon_menu_screen import PokemonMenuScreen
@@ -62,7 +62,7 @@ class MainMenuScreen:
         if button_name == "fight":
             pokemon_date_list = pokemon.load_pokemon_data()
             enemy_pokemon = pokemon.create_random_pokemon(pokemon_date_list)
-            return BattleTransitionScreen(self.player, enemy_pokemon)
+            return CombatTransitionScreen(self.player, enemy_pokemon)
         elif button_name == "pokemon":
             return PokemonMenuScreen(self.player)
         elif button_name == "bag":
