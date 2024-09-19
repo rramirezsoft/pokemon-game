@@ -35,18 +35,24 @@ def render_text(font_path, size, text, color):
     return font.render(text, True, color)
 
 
-def replace_placeholders(text, placeholders):
-    """
-    Reemplaza los placeholders en un texto con los valores proporcionados.
-
-    :param text: El texto con los placeholders, por ejemplo "Hola {nombre}"
-    :param placeholders: Un diccionario con los valores a sustituir,
-                         por ejemplo {"nombre": "Ash"}
-    :return: El texto con los placeholders reemplazados.
-    """
-    for key, value in placeholders.items():
-        text = text.replace(f"{{{key}}}", value)
-    return text
+"""
+Funciones para pintar y rendear las imágenes de los pokemon en combate.
+"""
 
 
+def draw_pokemon(screen, pokemon, position, scale_factor):
+    """Dibuja un Pokémon en la pantalla en la posición dada con el tamaño escalado."""
+    if pokemon.image:
+        scaled_image = pygame.transform.scale(pokemon.image, (
+            int(pokemon.image.get_width() * scale_factor),
+            int(pokemon.image.get_height() * scale_factor)
+        ))
+        screen.blit(scaled_image, position)
 
+
+def resize_image_to_width(image, new_width):
+    """Redimensiona la imagen para que ajuste al nuevo ancho manteniendo las proporciones."""
+    original_width, original_height = image.get_size()
+    new_height = int((new_width / original_width) * original_height)
+    resized_image = pygame.transform.scale(image, (new_width, new_height))
+    return resized_image

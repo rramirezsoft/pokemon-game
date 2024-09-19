@@ -1,6 +1,12 @@
 {
     "combat": {
-        "encounter": "A wild {pokemon_enemy} appeared!"
+        "encounter": [
+            "A wild {enemy_pokemon} appeared!",
+            "Let's go {player_pokemon}!"
+            ],
+        "actions": [
+            "What will {player_pokemon} do?"
+        ]
 
     },
     "professor": {

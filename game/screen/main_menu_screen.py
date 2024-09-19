@@ -62,7 +62,7 @@ class MainMenuScreen:
         if button_name == "fight":
             pokemon_date_list = pokemon.load_pokemon_data()
             enemy_pokemon = pokemon.create_random_pokemon(pokemon_date_list)
-            return CombatScreen(self.player, enemy_pokemon)
+            return BattleTransitionScreen(self.player, enemy_pokemon)
         elif button_name == "pokemon":
             return PokemonMenuScreen(self.player)
         elif button_name == "bag":

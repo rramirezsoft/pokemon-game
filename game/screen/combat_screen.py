@@ -1,5 +1,4 @@
 import os
-
 import pygame
 from game import utils
 import game.ui as ui
@@ -22,33 +21,68 @@ class CombatScreen:
         self.text_display_manager = TextDisplayManager(self.font)
         self.dialogue_manager.set_context("combat")
         self.dialogue_stage = "encounter"
-        self.encounter_text = (
-            self.dialogue_manager.get_dialogue(self.dialogue_stage).format(pokemon_enemy=self.enemy_pokemon.name))
+
+        # Diálogos con placeholders
+        self.dialogue_lines = self.dialogue_manager.get_dialogue_with_placeholders(
+            "encounter",  # Clave del diálogo
+            {
+                "enemy_pokemon": self.enemy_pokemon.name,
+                "player_pokemon": self.player_current_pokemon.name
+            }
+        )
+        self.current_dialogue_index = 0
+        self.current_dialogue = self.dialogue_lines[self.current_dialogue_index]
 
         # Cargar la imagen de fondo
         self.background_image = pygame.image.load("../assets/img/battle/campo_batalla.png").convert_alpha()
         self.screen_width, self.screen_height = pygame.display.get_surface().get_size()
-        self.background_image = self.resize_image_to_width(self.background_image, self.screen_width)
+        self.background_image = utils.resize_image_to_width(self.background_image, self.screen_width)
 
         # Inicializar las posiciones de los Pokémon
-        self.player_pokemon_pos = (100, 260)
-        self.enemy_pokemon_start_pos = (-200, 92)  # Inicio fuera de la pantalla (lado izquierdo)
-        self.enemy_pokemon_end_pos = (500, 92)  # Posición final del Pokémon enemigo (lado derecho)
+        self.player_pokemon_pos = (-300, 260)
+        self.enemy_pokemon_start_pos = (-200, 92)
+        self.enemy_pokemon_end_pos = (500, 92)
+        self.player_pokemon_end_pos = (100, 260)
 
-        # Configurar la animación de movimiento del enemigo
-        self.pokemon_speed = 6  # Velocidad de movimiento del enemigo
+        # Configurar la animación de movimiento
+        self.pokemon_speed = 6
         self.enemy_pokemon_current_pos = list(self.enemy_pokemon_start_pos)
+        self.player_pokemon_current_pos = list(self.player_pokemon_pos)
 
-        # Factor de escala para las imágenes de los Pokémon
-        self.player_pokemon_scale_factor = 0.6  # Escala mayor para el Pokémon del jugador
-        self.enemy_pokemon_scale_factor = 0.4  # Escala menor para el Pokémon enemigo
+        # Posiciones iniciales y finales para las cajas de estado
+        self.player_box_start_pos = (self.screen_width, 300)
+        self.enemy_box_start_pos = (-250, 50)
+        self.player_box_end_pos = (self.screen_height - 51, 300)
+        self.enemy_box_end_pos = (2, 50)
+
+        self.enemy_box_current_pos = list(self.enemy_box_start_pos)
+        self.player_box_current_pos = list(self.player_box_start_pos)
+
+        # Estado de las animaciones
+        self.enemy_moved = False
+        self.player_moved = False
+        self.waiting_for_next_dialogue = True
+
+        # Escala para las imágenes de los Pokémon
+        self.player_pokemon_scale_factor = 0.6
+        self.enemy_pokemon_scale_factor = 0.4
 
     def handle_events(self, event):
         """Maneja los eventos de la pantalla de combate."""
         if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-            # Completa el texto inmediatamente si no ha sido mostrado por completo
             if not self.text_display_manager.is_dialogue_complete():
+                # Si el texto no ha terminado de mostrarse, complétalo al pulsar Enter
                 self.text_display_manager.complete_text()
+            else:
+                # Avanzar al siguiente diálogo si el texto ya ha sido mostrado completamente
+                if self.current_dialogue_index < len(self.dialogue_lines) - 1:
+                    self.current_dialogue_index += 1
+                    self.current_dialogue = self.dialogue_lines[self.current_dialogue_index]
+                    self.text_display_manager.set_text(self.current_dialogue)
+
+                    # Activar el movimiento del Pokémon del jugador al mostrar el segundo diálogo
+                    if self.current_dialogue_index == 1:
+                        self.waiting_for_next_dialogue = False  # Permitir que el Pokémon del jugador se mueva
         return self
 
     def update(self):
@@ -58,9 +92,30 @@ class CombatScreen:
             self.enemy_pokemon_current_pos[0] += self.pokemon_speed
             if self.enemy_pokemon_current_pos[0] > self.enemy_pokemon_end_pos[0]:
                 self.enemy_pokemon_current_pos[0] = self.enemy_pokemon_end_pos[0]
-                self.text_display_manager.set_text(self.encounter_text)
+                self.text_display_manager.set_text(self.current_dialogue)
+                self.enemy_moved = True
 
-        # Actualizar el sistema de diálogo (para mostrar progresivamente el texto)
+        # Si el enemigo ha llegado, mover su caja de estado
+        if self.enemy_moved and self.enemy_box_current_pos[0] < self.enemy_box_end_pos[0]:
+            self.enemy_box_current_pos[0] += self.pokemon_speed
+            if self.enemy_box_current_pos[0] > self.enemy_box_end_pos[0]:
+                self.enemy_box_current_pos[0] = self.enemy_box_end_pos[0]
+
+        # Mover el Pokémon del jugador después de que el enemigo haya terminado y cuando el diálogo avance
+        if self.enemy_moved and not self.waiting_for_next_dialogue:
+            if self.player_pokemon_current_pos[0] < self.player_pokemon_end_pos[0]:
+                self.player_pokemon_current_pos[0] += self.pokemon_speed
+                if self.player_pokemon_current_pos[0] > self.player_pokemon_end_pos[0]:
+                    self.player_pokemon_current_pos[0] = self.player_pokemon_end_pos[0]
+                    self.player_moved = True
+
+        # Si el jugador ha llegado, mover su caja de estado
+        if self.player_moved and self.player_box_current_pos[0] > self.player_box_end_pos[0]:
+            self.player_box_current_pos[0] -= self.pokemon_speed
+            if self.player_box_current_pos[0] < self.player_box_end_pos[0]:
+                self.player_box_current_pos[0] = self.player_box_end_pos[0]
+
+        # Actualizar el sistema de diálogo
         self.text_display_manager.update()
 
     def draw(self, screen):
@@ -68,37 +123,25 @@ class CombatScreen:
         screen_width = pygame.display.get_surface().get_width()
         screen.blit(self.background_image, (0, 0))
 
-        self.draw_pokemon(screen, self.player_current_pokemon, self.player_pokemon_pos,
-                          self.player_pokemon_scale_factor)  # Dibuja al pokemon del jugador
+        # Dibujar el Pokémon del jugador si ya se ha movido
+        utils.draw_pokemon(screen, self.player_current_pokemon, self.player_pokemon_current_pos,
+                           self.player_pokemon_scale_factor)
         ui.draw_combat_background(screen)
-        self.draw_pokemon(screen, self.enemy_pokemon, self.enemy_pokemon_current_pos, self.enemy_pokemon_scale_factor)
 
-        # Dibuja las cajas de estado (nombre, nivel, vida, etc.)
-        box_width = 250
-        ui.draw_combat_pokemon_status_box(screen, self.player_current_pokemon,
-                                          (screen_width - box_width-1, 300), is_player_pokemon=True)
-        ui.draw_combat_pokemon_status_box(screen, self.enemy_pokemon, (2, 50), is_player_pokemon=False)
+        # Dibujar el Pokémon enemigo
+        utils.draw_pokemon(screen, self.enemy_pokemon, self.enemy_pokemon_current_pos, self.enemy_pokemon_scale_factor)
+
+        # Dibujar las cajas de estado cuando lleguen a su posición
+        if self.enemy_moved:
+            ui.draw_combat_pokemon_status_box(screen, self.enemy_pokemon, self.enemy_box_current_pos,
+                                              is_player_pokemon=False)
+
+        if self.player_moved:
+            ui.draw_combat_pokemon_status_box(screen, self.player_current_pokemon, self.player_box_current_pos,
+                                              is_player_pokemon=True)
 
         # Dibujar el recuadro para el texto
         ui.draw_dialog_box(screen)
 
-        # Mostrar el texto de diálogo
+        # Mostrar el texto de diálogo actual
         self.text_display_manager.draw(screen)
-
-    @staticmethod
-    def draw_pokemon(screen, pokemon, position, scale_factor):
-        """Dibuja un Pokémon en la pantalla en la posición dada con el tamaño escalado."""
-        if pokemon.image:
-            scaled_image = pygame.transform.scale(pokemon.image, (
-                int(pokemon.image.get_width() * scale_factor),
-                int(pokemon.image.get_height() * scale_factor)
-            ))
-            screen.blit(scaled_image, position)
-
-    @staticmethod
-    def resize_image_to_width(image, new_width):
-        """Redimensiona la imagen para que ajuste al nuevo ancho manteniendo las proporciones."""
-        original_width, original_height = image.get_size()
-        new_height = int((new_width / original_width) * original_height)
-        resized_image = pygame.transform.scale(image, (new_width, new_height))
-        return resized_image

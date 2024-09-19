@@ -1,7 +1,7 @@
 import pygame
 import pygame.gfxdraw
 import math
-
+import utils
 from game.types import TypeIcons
 
 
@@ -963,7 +963,7 @@ def draw_combat_pokemon_status_box(screen, pokemon, position, is_player_pokemon,
     pygame.draw.rect(screen, black, (*position, box_width, box_height), 2)  # Borde negro
 
     # Cargar la fuente
-    font = pygame.font.Font(None, 30)
+    font = pygame.font.Font("../assets/fonts/pokemon.ttf", 30)
 
     # Dibujar el nombre del Pokémon y nivel
     name_text = font.render(f"{pokemon.name}", True, black)

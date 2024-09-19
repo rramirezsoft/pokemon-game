@@ -160,17 +160,15 @@ class OakIntroScreen:
         elif self.dialog_stage == 'name_prompt':
             self.current_line_index, self.dialog_stage, self.dialog_active = 0, 'info_starters', False
 
-    def get_dialogue_with_placeholders(self, key, placeholders):
-        """Obtiene el diálogo con los placeholders reemplazados."""
-        return [utils.replace_placeholders(line, placeholders) for line in self.dialogue_manager.get_dialogue(key)]
-
     def set_dialog_text(self):
         if self.dialog_stage == 'select_starter':
             placeholders = {"pokemon_name": self.selected_pokemon_name, "pokemon_type": self.selected_pokemon_type}
-            text = self.get_dialogue_with_placeholders('select_starter', placeholders)[self.current_line_index]
+            text = self.dialogue_manager.get_dialogue_with_placeholders('select_starter',
+                                                                        placeholders)[self.current_line_index]
         elif self.dialog_stage == 'name_prompt':
             placeholders = {"player_name": self.player_name}
-            text = self.get_dialogue_with_placeholders('name_prompt', placeholders)[self.current_line_index]
+            text = self.dialogue_manager.get_dialogue_with_placeholders('name_prompt', placeholders
+                                                                        )[self.current_line_index]
         else:
             text = self.dialogue_manager.get_dialogue(self.dialog_stage)[self.current_line_index]
         self.text_display_manager.set_text(text)

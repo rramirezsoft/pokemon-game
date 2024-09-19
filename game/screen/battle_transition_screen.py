@@ -52,8 +52,7 @@ class BattleTransitionScreen:
             # Rotar la imagen de la Pokébola solo mientras la animación está en curso
             pokeball_rotated = pygame.transform.rotate(pokeball_scaled, self.rotation_angle)
         else:
-            # No rotar la imagen cuando la animación haya terminado
-            pokeball_rotated = pokeball_scaled
+            return CombatScreen(self.player, self.enemy_pokemon)
 
         # Calcular la posición para centrar la Pokébola
         x = (pygame.display.get_surface().get_width() - size) // 2

@@ -13,12 +13,12 @@ def main():
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     pygame.display.set_caption("Pokémon Game")
 
-   
+    """
     player = Player("RAUL")
     player.get_starter("charmander")
     current_screen = MainMenuScreen(player)  # Pantalla inicial
-
-    #current_screen = TitleScreen()
+    """
+    current_screen = TitleScreen()
 
     running = True
     while running:
