@@ -26,8 +26,7 @@ class PokemonDataScreen:
         self.move_rects = []  # Rectángulos de los movimientos para detección de clics
 
         # Imagen de la Pokébola para el fondo
-        self.pokeball_image = pygame.image.load("../assets/img/icons/pokeball.png")
-        self.pokeball_image = pygame.transform.scale(self.pokeball_image, (26, 26))
+        self.pokeball_image = utils.load_image("../assets/img/icons/pokeball.png", (26, 26))
 
         # Fuente para el texto
         self.font = pygame.font.Font(utils.load_font(), 30)

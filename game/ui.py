@@ -1,7 +1,7 @@
 import pygame
 import pygame.gfxdraw
 import math
-import utils
+import game.utils as utils
 from game.types import TypeIcons
 
 
@@ -132,7 +132,8 @@ def draw_dialog_box(screen, position=(4, 456), box_width=792, box_height=140,
 
     # Dibujar el borde dorado justo dentro del negro
     pygame.draw.rect(dialog_surface, outer_border_color,
-                     (border_thickness, border_thickness, box_width - 2 * border_thickness, box_height - 2 * border_thickness),
+                     (border_thickness, border_thickness, box_width - 2 * border_thickness,
+                      box_height - 2 * border_thickness),
                      border_radius=outer_border_radius, width=inner_border_thickness)
 
     # Dibujar el borde grisáceo interior (más grueso a los lados, más delgado arriba y abajo)
@@ -947,56 +948,244 @@ def draw_text_in_rect(screen, position, line_height, text_values, font, rect_wid
         screen.blit(value_surface, value_rect)
 
 
-def draw_combat_pokemon_status_box(screen, pokemon, position, is_player_pokemon, box_width=250, box_height=80):
+"""
+Funciones para dibujar las cajas de información de los Pokémon en lso combates.
+"""
+
+
+def draw_combat_pokemon_status_box(screen, pokemon, position, is_player_pokemon,
+                                   box_width=250, box_height=80, player=None,
+                                   pokeball_image=None):
     """
     Dibuja la caja de información de un Pokémon, incluyendo nombre, nivel, HP y barra de experiencia.
+
+    :param screen: Superficie donde se dibuja la caja.
+    :param pokemon: Objeto Pokémon que contiene las estadísticas y datos actuales del Pokémon.
+    :param position: Tupla con las coordenadas (x, y) de la esquina superior izquierda de la caja.
+    :param is_player_pokemon: Indica si es el Pokémon del jugador (True) o del oponente (False).
+    :param box_width: Ancho de la caja de información (por defecto 250).
+    :param box_height: Altura de la caja de información (por defecto 80).
+    :param player: Objeto jugador que contiene el equipo de Pokémon (opcional).
+    :param pokeball_image: Imagen de una Pokéball, que se dibuja si el Pokémon pertenece al jugador (opcional).
     """
-    # Colores
-    white = (255, 255, 255)
-    black = (0, 0, 0)
-    green = (34, 139, 34)
-    red = (255, 0, 0)
-    blue = (0, 0, 255)
+
+    # Definición de colores
+    colors = {
+        "white": (255, 255, 255),
+        "light_gray": (240, 240, 240),
+        "black": (0, 0, 0),
+        "gray": (200, 200, 200),
+        "dark_gray": (80, 80, 80),
+        "yellow": (255, 255, 0),
+        "blue": (0, 0, 255),
+        "hp_green": (34, 139, 34),
+        "hp_yellow": (255, 255, 0),
+        "hp_orange": (255, 165, 0),
+        "hp_red": (255, 0, 0),
+    }
+
+    # Fuentes de texto
+    fonts = {
+        "large": pygame.font.Font("../assets/fonts/pokemon.ttf", 32),
+        "medium": pygame.font.Font("../assets/fonts/pokemon.ttf", 24),
+        "small": pygame.font.Font("../assets/fonts/pokemon.ttf", 15),
+    }
+
+    # Ajustar la altura de la caja si es el Pokémon del jugador
+    if is_player_pokemon:
+        box_height += 25
 
     # Dibujar el rectángulo de la caja
-    pygame.draw.rect(screen, white, (*position, box_width, box_height))
-    pygame.draw.rect(screen, black, (*position, box_width, box_height), 2)  # Borde negro
+    pygame.draw.rect(screen, colors["light_gray"], (*position, box_width, box_height))
+    pygame.draw.rect(screen, colors["black"], (*position, box_width, box_height), 2)  # Borde negro
 
-    # Cargar la fuente
-    font = pygame.font.Font("../assets/fonts/pokemon.ttf", 30)
-
-    # Dibujar el nombre del Pokémon y nivel
-    name_text = font.render(f"{pokemon.name}", True, black)
-    level_text = font.render(f"Lv: {pokemon.level}", True, black)
-    screen.blit(name_text, (position[0] + 10, position[1] + 10))
-    screen.blit(level_text, (position[0] + box_width - 60, position[1] + 10))
+    # Dibujar nombre y nivel del Pokémon
+    draw_text(screen, fonts["large"], pokemon.name, colors["black"], (position[0] + 10, position[1] + 2))
+    draw_text(screen, fonts["medium"], f"Lv. {pokemon.level}", colors["black"],
+              (position[0] + box_width - 68, position[1] + 5))
 
     # Dibujar la barra de HP
-    hp_bar_position = (position[0] + 10, position[1] + 40)
-    hp_bar_width = box_width - 20
-    hp_bar_height = 10
+    draw_hp_bar(screen, pokemon, position, box_width, colors, fonts["small"])
 
-    # Porcentaje de HP actual
+    # Mostrar la imagen de la Pokéball si el jugador tiene un ejemplar capturado.
+    if player and pokeball_image and any(pok == pokemon.name for pok in player.pokedex_captured):
+        screen.blit(pokeball_image, (position[0] + 10, position[1] + 44))
+
+    # Dibujar PS actuales y máximos si es el Pokémon del jugador
+    if is_player_pokemon:
+        draw_hp_text(screen, pokemon, position, box_width, colors["white"], fonts["medium"])
+
+    # Dibujar barra de experiencia si es el Pokémon del jugador
+    if is_player_pokemon:
+        draw_exp_bar(screen, pokemon, position, box_width, box_height, colors)
+
+
+def draw_text(screen, font, text, color, position):
+    """Dibuja el texto en la pantalla."""
+    rendered_text = font.render(text, True, color)
+    screen.blit(rendered_text, position)
+
+
+def draw_hp_bar(screen, pokemon, position, box_width, colors, small_font):
+    """Dibuja la barra de HP de un Pokémon."""
+    hp_bar_position = (position[0] + 110, position[1] + 50)
+    hp_bar_width = box_width / 2
+    hp_bar_height = 10
     hp_percentage = pokemon.current_hp / pokemon.max_stats['hp']
 
-    # Dibujar la barra de fondo (roja) y la barra de HP (verde)
-    pygame.draw.rect(screen, red, (*hp_bar_position, hp_bar_width, hp_bar_height))  # Fondo HP (rojo)
-    pygame.draw.rect(screen, green,
-                     (*hp_bar_position, int(hp_bar_width * hp_percentage), hp_bar_height))  # HP actual (verde)
+    # Seleccionar color según porcentaje de HP
+    if hp_percentage > 0.5:
+        hp_color = colors["hp_green"]
+    elif 0.25 < hp_percentage <= 0.5:
+        hp_color = colors["hp_yellow"]
+    elif 0.125 < hp_percentage <= 0.25:
+        hp_color = colors["hp_orange"]
+    else:
+        hp_color = colors["hp_red"]
 
-    # Dibujar los PS actuales y máximos si es el Pokémon del jugador
-    if is_player_pokemon:
-        hp_text = font.render(f"{pokemon.current_hp}/{pokemon.max_stats['hp']} PS", True, black)
-        screen.blit(hp_text, (position[0] + 10, position[1] + 55))
+    # Dibujar borde de la barra de HP
+    hp_bar_border_position = (hp_bar_position[0] - 17, hp_bar_position[1] - 2)
+    hp_bar_border_width = hp_bar_width + 19
+    hp_bar_border_height = hp_bar_height + 4
+    pygame.draw.rect(screen, colors["dark_gray"], (*hp_bar_border_position, hp_bar_border_width, hp_bar_border_height),
+                     border_radius=2)
 
-    # Dibujar la barra de experiencia (solo si es el Pokémon del jugador)
-    if is_player_pokemon:
-        exp_bar_position = (position[0] + 10, position[1] + 70)
-        exp_bar_width = box_width - 20
-        exp_bar_height = 5
+    # Dibujar barra de HP vacía y actual
+    pygame.draw.rect(screen, colors["gray"], (*hp_bar_position, hp_bar_width, hp_bar_height), border_radius=1)
+    pygame.draw.rect(screen, hp_color, (*hp_bar_position, int(hp_bar_width * hp_percentage), hp_bar_height),
+                     border_radius=1)
 
-        # Porcentaje de experiencia actual
-        exp_percentage = pokemon.experience / pokemon.experience_to_next_level
+    # Dibujar el texto "HP"
+    draw_text(screen, small_font, "HP", colors["yellow"], (hp_bar_position[0] - 14, hp_bar_position[1] - 4))
 
-        # Dibujar la barra de experiencia
-        pygame.draw.rect(screen, blue, (*exp_bar_position, int(exp_bar_width * exp_percentage), exp_bar_height))
+
+def draw_hp_text(screen, pokemon, position, box_width, white, font):
+    """Dibuja los PS actuales y máximos si es el Pokémon del jugador."""
+    ps_box_width = 135
+    ps_box_height = 18
+    ps_box_position = (position[0] + 100, position[1] + 68)
+    pygame.draw.rect(screen, white, (*ps_box_position, ps_box_width, ps_box_height), border_radius=5)
+
+    hp_text = font.render(f"{pokemon.current_hp}/{pokemon.max_stats['hp']}", True, (0, 0, 0))
+    text_rect = hp_text.get_rect(
+        center=(ps_box_position[0] + ps_box_width // 2, ps_box_position[1] + ps_box_height // 2))
+    screen.blit(hp_text, text_rect)
+
+
+def draw_exp_bar(screen, pokemon, position, box_width, box_height, colors):
+    """Dibuja la barra de experiencia si es el Pokémon del jugador."""
+    exp_bar_position = (position[0] + 10, position[1] + box_height - 5)
+    exp_bar_width = box_width - 20
+    exp_bar_height = 10
+    exp_percentage = pokemon.experience / pokemon.experience_to_next_level
+
+    # Dibujar borde y barra de experiencia
+    pygame.draw.rect(screen, colors["black"], (*exp_bar_position, exp_bar_width, exp_bar_height), border_radius=2)
+    pygame.draw.rect(screen, colors["white"],
+                     (exp_bar_position[0] + 2, exp_bar_position[1] + 2, exp_bar_width - 4, exp_bar_height - 4),
+                     border_radius=2)
+    pygame.draw.rect(screen, colors["blue"], (
+        exp_bar_position[0] + 2, exp_bar_position[1] + 2, int((exp_bar_width - 4) * exp_percentage),
+        exp_bar_height - 4),
+                     border_radius=2)
+
+
+"""
+GUARDADO DE PARTIDA
+"""
+
+
+def draw_save_game_box(screen, player, box_position=(30, 30), box_width=400, box_height=300):
+    """
+    Dibuja una caja de información de guardado de juego con los detalles del jugador, equipo Pokémon y tiempo jugado.
+
+    :param screen: La pantalla en la que se va a dibujar.
+    :param player: Objeto del jugador.
+    :param box_position: La posición superior izquierda de la caja.
+    :param box_width: El ancho de la caja.
+    :param box_height: La altura de la caja.
+    """
+    # Colores
+    outer_border_color = (218, 165, 32)
+    inner_border_color = (75, 77, 76)
+    text_color = (0, 0, 0)
+    red_color = (255, 0, 0)
+    fill_color = (255, 255, 255)
+
+    # Bordes y radios
+    outer_border_thickness = 4
+    inner_border_thickness = 4
+    outer_border_radius = 8
+    inner_border_radius = 5
+
+    # Fuente
+    font = pygame.font.Font(utils.load_font(), 35)
+
+    # Crear la superficie para el cuadro de guardado
+    save_box_surface = pygame.Surface((box_width, box_height), pygame.SRCALPHA)
+
+    # Dibujar el borde dorado exterior
+    pygame.draw.rect(save_box_surface, outer_border_color, (0, 0, box_width, box_height),
+                     border_radius=outer_border_radius, width=outer_border_thickness)
+
+    # Dibujar el borde grisáceo interior
+    pygame.draw.rect(save_box_surface, inner_border_color,
+                     (outer_border_thickness, outer_border_thickness,
+                      box_width - 2 * outer_border_thickness, box_height - 2 * outer_border_thickness),
+                     border_radius=inner_border_radius, width=inner_border_thickness)
+
+    # Dibujar el relleno blanco dentro del cuadro de guardado
+    pygame.draw.rect(save_box_surface, fill_color,
+                     (outer_border_thickness + inner_border_thickness, outer_border_thickness + inner_border_thickness,
+                      box_width - 2 * (outer_border_thickness + inner_border_thickness),
+                      box_height - 2 * (outer_border_thickness + inner_border_thickness)),
+                     border_radius=5)
+
+    # Blit del cuadro de guardado en la superficie principal
+    screen.blit(save_box_surface, box_position)
+
+    # Posiciones de los títulos (izquierda) y valores (derecha)
+    left_x = box_position[0] + 30
+    right_x = box_position[0] + box_width - 30
+    start_y = box_position[1] + 70
+    line_spacing = 45
+
+    # Dibujar el título en rojo centrado
+    title_text = font.render("POKÉMON GAME", True, red_color)
+    screen.blit(title_text, (box_position[0] + (box_width - title_text.get_width()) // 2, box_position[1] + 20))
+
+    # 1. Dibujar la información del jugador en la parte izquierda (PLAYER)
+    player_text = font.render("PLAYER:", True, text_color)
+    screen.blit(player_text, (left_x, start_y))
+
+    player_name_text = font.render(player.name, True, text_color)
+    screen.blit(player_name_text, (right_x - player_name_text.get_width(), start_y))
+
+    # 2. Dibujar la Pokédex (POKÉDEX)
+    pokedex_text = font.render("POKÉDEX:", True, text_color)
+    screen.blit(pokedex_text, (left_x, start_y + line_spacing))
+
+    pokedex_seen = player.get_pokedex_counts()[0]
+    pokedex_count_text = font.render(f"{pokedex_seen}", True, text_color)
+    screen.blit(pokedex_count_text, (right_x - pokedex_count_text.get_width(), start_y + line_spacing))
+
+    # 3. Dibujar Pokémon Team (POKÉMON TEAM)
+    pokemon_team_text = font.render("POKÉMON TEAM:", True, text_color)
+    screen.blit(pokemon_team_text, (left_x, start_y + 2 * line_spacing))
+
+    # Dibujar las imágenes de los Pokémon en el equipo debajo del texto "POKÉMON TEAM"
+    pokemon_image_y = start_y + 3 * line_spacing
+    pokemon_image_x = left_x
+    pokemon_image_size = (40, 40)
+
+    for pokemon in player.pokemons:
+        if pokemon.image:
+            resized_image = pygame.transform.scale(pokemon.image, pokemon_image_size)
+            screen.blit(resized_image, (pokemon_image_x, pokemon_image_y))
+            pokemon_image_x += 60
+
+    # 4. Dibujar el tiempo de juego (TIME)
+    time_text = font.render("TIME:", True, text_color)
+    playtime_text = font.render(player.get_playtime_formatted(), True, text_color)
+    screen.blit(time_text, (left_x, pokemon_image_y + 40))
+    screen.blit(playtime_text, (right_x - playtime_text.get_width(), pokemon_image_y + 40))

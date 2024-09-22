@@ -1,5 +1,5 @@
 import pygame
-from game.ui import PokemonSlot, Footer, MiniMenu, draw_pokemon_background
+from game.ui import PokemonSlot, Footer, MiniMenu, draw_pokemon_background, HealthBar
 import game.utils as utils
 
 
@@ -234,29 +234,42 @@ class PokemonMenuScreen:
 
     def swap_pokemon_slots(self, slot_a, slot_b):
         """ Intercambia los Pokémon entre dos slots. """
-        # Verificar que ambos slots tengan Pokémon antes de intentar intercambiarlos
         if slot_a is not None and slot_b is not None and slot_a != slot_b:
+            # Intercambiar Pokémon
             pokemon_a = self.pokemon_team[slot_a]
             pokemon_b = self.pokemon_team[slot_b]
 
             if pokemon_a is not None and pokemon_b is not None:
-                # Intercambia los Pokémon en los slots
+                # Intercambiar Pokémon en el equipo
                 self.pokemon_team[slot_a], self.pokemon_team[slot_b] = self.pokemon_team[slot_b], self.pokemon_team[
                     slot_a]
-                self.slots[slot_a].pokemon, self.slots[slot_b].pokemon = self.slots[slot_b].pokemon, self.slots[
-                    slot_a].pokemon
-                print(f"Intercambiados slots: {slot_a} con {slot_b}")
+
+                # Actualizar las barras de salud
+                self.slots[slot_a].pokemon = pokemon_b
+                self.slots[slot_b].pokemon = pokemon_a
+
+                # Re-inicializar las barras de salud
+                self.slots[slot_a].health_bar = HealthBar(
+                    pokemon_b.max_stats['hp'],
+                    pokemon_b.current_hp,
+                    self.slots[slot_a].health_bar.rect,
+                    selected=self.slots[slot_a].selected
+                )
+                self.slots[slot_b].health_bar = HealthBar(
+                    pokemon_a.max_stats['hp'],
+                    pokemon_a.current_hp,
+                    self.slots[slot_b].health_bar.rect,
+                    selected=self.slots[slot_b].selected
+                )
 
                 # Restablecer la selección y salir del modo de movimiento
                 self.moving_slot = None
                 self.slot_selected = None
-                self.show_menu = False  # Asegurarse de que el mini menú desaparezca
+                self.show_menu = False
 
-                # Actualizar la preselección para que ninguna caja esté seleccionada
+                # Actualizar la preselección
                 self.update_preselection()
             else:
-                # Si alguno de los slots está vacío, no hacer nada
-                print("No se puede intercambiar, uno de los slots está vacío.")
                 self.moving_slot = None
                 self.update_preselection()
 

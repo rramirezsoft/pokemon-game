@@ -2,6 +2,7 @@ import pygame
 from game import utils
 from game.screen.combat_transition_screen import CombatTransitionScreen
 from game.screen.combat_screen import CombatScreen
+from game.screen.save_game_screen import SaveGameScreen
 from game.ui import Button
 from game.screen.pokemon_menu_screen import PokemonMenuScreen
 from game.sounds import SoundManager
@@ -14,7 +15,7 @@ class MainMenuScreen:
         self.font = pygame.font.Font(utils.load_font(), 35)
 
         # Cargar imagen de fondo
-        self.background = utils.load_image("../assets/img/main_menu/fondo2.png")
+        self.background = utils.load_image("../assets/img/main_menu/fondo.png")
         self.background = pygame.transform.scale(self.background, (
             pygame.display.get_surface().get_width(), pygame.display.get_surface().get_height()))
 
@@ -74,7 +75,7 @@ class MainMenuScreen:
         elif button_name == "options":
             print("Abrir opciones")
         elif button_name == "save":
-            print("Guardar juego")
+            return SaveGameScreen(self.player)
 
     def update(self):
         """Actualizar el estado hover de los botones"""

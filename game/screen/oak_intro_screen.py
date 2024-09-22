@@ -17,16 +17,13 @@ class OakIntroScreen:
 
         # Cargar imágenes y rectángulos de los Pokémon
         self.pokemons = {
-            "Bulbasaur": (utils.load_image("../assets/pokemon_images/bulbasaur.png",
-                                           (120, 120)), pygame.Rect(50, 280, 120, 120)),
-            "Charmander": (utils.load_image("../assets/pokemon_images/charmander.png",
-                                            (120, 120)), pygame.Rect(170, 280, 120, 120)),
-            "Squirtle": (utils.load_image("../assets/pokemon_images/squirtle.png",
-                                          (120, 120)), pygame.Rect(290, 280, 120, 120)),
+            "Bulbasaur": (utils.load_image("../assets/pokemon_images/bulbasaur.png", (120, 120)), pygame.Rect(50, 280, 120, 120)),
+            "Charmander": (utils.load_image("../assets/pokemon_images/charmander.png", (120, 120)), pygame.Rect(170, 280, 120, 120)),
+            "Squirtle": (utils.load_image("../assets/pokemon_images/squirtle.png", (120, 120)), pygame.Rect(290, 280, 120, 120)),
         }
 
-        self.selected_pokemon_name, self.selected_pokemon_type = "", ""  # Pokemon seleccionado
-        self.starter_pokemon = False  # Pokemon confirmado
+        self.selected_pokemon_name, self.selected_pokemon_type = "", ""
+        self.starter_pokemon = False
 
         # Diálogos
         self.dialogue_manager = DialogueManager(
@@ -52,10 +49,9 @@ class OakIntroScreen:
         self.sound_manager = SoundManager()
         self.sound_manager.play_music("oak", loop=-1)
 
-        # Text Display Manager para mostrar los diálogos carácter por carácter
         self.text_display_manager = TextDisplayManager(self.font)
 
-        self.set_dialog_text()  # Abrimos con el primer bloque de dialogos
+        self.set_dialog_text()  # Abrimos con el primer bloque de diálogos
 
     def handle_events(self, event):
         """Maneja los eventos del teclado y mouse."""
@@ -64,9 +60,11 @@ class OakIntroScreen:
                 return self.handle_return_key()
             elif event.key == pygame.K_ESCAPE:
                 return None
-            elif event.key == pygame.K_UP or event.key == pygame.K_DOWN:
+            elif event.key in (pygame.K_UP, pygame.K_DOWN):
                 if self.show_confirmation:
-                    self.handle_confirmation_navigation(event.key)
+                    self.selected_confirmation_option = utils.handle_confirmation_navigation(
+                        self.selected_confirmation_option, event.key
+                    )
         elif (event.type == pygame.MOUSEBUTTONDOWN and self.show_starters
               and not self.show_confirmation and self.text_display_manager.is_dialogue_complete()):
             self.handle_mouse_click(event.pos)
@@ -95,7 +93,6 @@ class OakIntroScreen:
                 if self.dialog_stage in ['greeting', 'name_prompt', 'info_starters']:
                     self.next_line()
                 elif self.dialog_stage == 'select_starter' and self.selected_pokemon_name:
-                    # Asegurarse de que un Pokémon fue seleccionado antes de avanzar
                     self.show_confirmation = True
                 if self.dialog_stage == 'confirm_starter':
                     self.sound_manager.stop_music()
@@ -110,11 +107,6 @@ class OakIntroScreen:
                 if rect.collidepoint(mouse_pos):
                     self.select_pokemon(name, {"Bulbasaur": "Grass-type",
                                                "Charmander": "Fire-type", "Squirtle": "Water-type"}[name])
-
-    def handle_confirmation_navigation(self, key):
-        """Maneja la navegación entre las opciones de confirmación (Sí/No)."""
-        if key == pygame.K_UP or key == pygame.K_DOWN:
-            self.selected_confirmation_option = 'yes' if self.selected_confirmation_option == 'no' else 'no'
 
     def select_pokemon(self, name, pokemon_type):
         """Selecciona un Pokémon y actualiza el estado de diálogo."""
@@ -145,11 +137,9 @@ class OakIntroScreen:
         self.set_dialog_text()
 
     def is_block_complete(self):
-        """Retorna True si el bloque de dialogos se ha completado"""
+        """Retorna True si el bloque de diálogos se ha completado."""
         dialogues = self.dialogue_manager.get_dialogue(self.dialog_stage)
-        if self.current_line_index >= len(dialogues) - 1:
-            return True
-        return False
+        return self.current_line_index >= len(dialogues) - 1
 
     def handle_dialog_transition(self):
         """Controla la transición entre diferentes etapas del diálogo."""
@@ -161,6 +151,7 @@ class OakIntroScreen:
             self.current_line_index, self.dialog_stage, self.dialog_active = 0, 'info_starters', False
 
     def set_dialog_text(self):
+        """Configura el texto actual del diálogo."""
         if self.dialog_stage == 'select_starter':
             placeholders = {"pokemon_name": self.selected_pokemon_name, "pokemon_type": self.selected_pokemon_type}
             text = self.dialogue_manager.get_dialogue_with_placeholders('select_starter',
@@ -181,50 +172,19 @@ class OakIntroScreen:
         box_position = None
 
         if self.dialog_active:
-            # Dibuja la caja de diálogo
             box_position = (4, 449)
             ui.draw_dialog_box(screen)
             self.text_display_manager.draw(screen)
 
         if self.show_starters:
             if self.show_confirmation:
-                # Solo dibujar el Pokémon seleccionado
                 selected_pokemon_image, selected_pokemon_rect = self.pokemons[self.selected_pokemon_name]
                 screen.blit(selected_pokemon_image, selected_pokemon_rect.topleft)
             else:
-                # Dibujar todos los Pokémon si no se está confirmando
                 for pokemon, (image, _) in self.pokemons.items():
                     screen.blit(image, self.pokemons[pokemon][1].topleft)
 
         if self.show_confirmation:
-            # Caja de confirmación, colocada justo encima del cuadro de diálogo, alineada a la derecha con un margen
-            # de 10px
-            confirmation_box_width = 140
-            confirmation_box_height = 140
-            confirmation_box_x = screen.get_width() - confirmation_box_width - 5
-            confirmation_box_y = box_position[1] - confirmation_box_height
-
-            # Dibuja el cuadro de confirmación con el mismo estilo que la caja de diálogo
-            ui.draw_dialog_box(screen, position=(confirmation_box_x, confirmation_box_y),
-                               box_width=confirmation_box_width, box_height=confirmation_box_height)
-
-            confirmation_font = pygame.font.Font(utils.load_font(), 35)
-            # Texto "Yes" y "No"
-            yes_text = confirmation_font.render("Yes", True, (0, 0, 0))
-            no_text = confirmation_font.render("No", True, (0, 0, 0))
-
-            # Posiciones del texto "Yes" y "No"
-            yes_text_pos = (confirmation_box_x + 50, confirmation_box_y + 25)
-            no_text_pos = (confirmation_box_x + 50, confirmation_box_y + 75)
-
-            screen.blit(yes_text, yes_text_pos)
-            screen.blit(no_text, no_text_pos)
-
-            # Dibuja la flecha ">" al lado de la opción seleccionada
-            arrow_text = confirmation_font.render(">", True, (0, 0, 0))
-
-            # Mostrar la flecha a la izquierda de la opción seleccionada
-            if self.selected_confirmation_option == 'yes':
-                screen.blit(arrow_text, (yes_text_pos[0] - 20, yes_text_pos[1]))
-            else:
-                screen.blit(arrow_text, (no_text_pos[0] - 20, no_text_pos[1]))
+            confirmation_box_position = (screen.get_width() - 145, box_position[1] - 140)
+            utils.draw_confirmation_box(screen, self.selected_confirmation_option,
+                                        position=confirmation_box_position)

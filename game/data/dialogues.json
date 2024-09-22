@@ -29,5 +29,17 @@
         "confirm_starter": [
             "It's an excellent choice! Your adventure is about to begin!"
         ]
-    }
+    },
+    "save_game": {
+        "save_prompt": [
+            "Would you like to save the game?"
+        ],
+        "saving_game": [
+            "Saving a lot of data. Don't turn off the power..."
+        ],
+        "saved_game": [
+            "Game saved successfully!"
+        ]
+
+  }
 }
