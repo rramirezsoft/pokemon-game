@@ -4,13 +4,14 @@ import game.utils as utils
 
 
 class PokemonMenuScreen:
-    def __init__(self, player):
+    def __init__(self, player, combat=None):
         """
         Inicializa la pantalla del menú de Pokémon con los 6 slots dispuestos en 1 columna.
 
         :param player: Objeto Player que contiene la información del jugador y sus Pokémon.
         """
         self.player = player
+        self.combat = combat  # Instancia del combate (si la hay)
         self.pokemon_team = self.player.pokemons
         self.slots = []
         self.selected_index = 0  # Índice del slot preseleccionado
@@ -43,8 +44,11 @@ class PokemonMenuScreen:
         self.footer = Footer(text="Back")
         self.footer.footer_rect.topleft = (0, 575)
 
-        # Crear minimenu
-        self.mini_menu = MiniMenu(position=(0, 0), size=(120, 100), options=["Data", "Move", "Back"])
+        #  Minimenu
+        if self.combat:
+            self.mini_menu = MiniMenu(position=(0, 0), size=(120, 100), options=["Data", "Switch", "Back"])
+        else:
+            self.mini_menu = MiniMenu(position=(0, 0), size=(120, 100), options=["Data", "Move", "Back"])
 
         self.moving_slot = None  # Variable para almacenar la primera caja seleccionada para mover.
 
@@ -88,7 +92,8 @@ class PokemonMenuScreen:
                             # Deseleccionar la caja y ocultar el menú
                             self.deselect_slot()
                         else:
-                            # Salir de la pantalla si no hay selección activa
+                            if self.combat:
+                                return self.combat
                             from game.screen.main_menu_screen import MainMenuScreen
                             return MainMenuScreen(self.player)
 
@@ -197,7 +202,8 @@ class PokemonMenuScreen:
                 # Deseleccionar la caja si está seleccionada
                 self.deselect_slot()
             else:
-                # Salir de la pantalla si no hay selección activa
+                if self.combat:
+                    return self.combat
                 from game.screen.main_menu_screen import MainMenuScreen
                 return MainMenuScreen(self.player)
 
@@ -208,16 +214,17 @@ class PokemonMenuScreen:
         option = self.mini_menu.options[self.mini_menu.selected_index]
 
         if option == "Back":
-            if self.slot_selected is None:
-                from game.screen.main_menu_screen import MainMenuScreen
-                return MainMenuScreen(self.player)
-            else:
-                self.deselect_slot()
+            self.deselect_slot()
 
         elif option == "Data":
-            # Cambiar a la pantalla de datos del Pokémon seleccionado
             from game.screen.pokemon_data_screen import PokemonDataScreen
+            if self.combat:
+                return PokemonDataScreen(self.player, self.pokemon_team, self.selected_index, self.combat)
             return PokemonDataScreen(self.player, self.pokemon_team, self.selected_index)
+
+        elif option == "Change Pokémon":
+            # Aquí puedes añadir lógica futura para cambiar Pokémon en combate
+            print("Opción de Cambiar Pokémon seleccionada (en combate, aún no implementada).")
 
         elif option == "Move":
             # Verificar si hay al menos dos Pokémon para intercambiar

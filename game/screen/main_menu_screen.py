@@ -76,6 +76,7 @@ class MainMenuScreen:
             print("Abrir opciones")
         elif button_name == "save":
             return SaveGameScreen(self.player)
+        return self
 
     def update(self):
         """Actualizar el estado hover de los botones"""

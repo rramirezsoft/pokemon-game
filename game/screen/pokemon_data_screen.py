@@ -8,7 +8,7 @@ class PokemonDataScreen:
     TAB_STATS = 1
     TAB_MOVES = 2
 
-    def __init__(self, player, pokemon_team, selected_pokemon_index):
+    def __init__(self, player, pokemon_team, selected_pokemon_index, combat=None):
         """
         Inicializa la pantalla de datos del Pokémon.
 
@@ -20,6 +20,7 @@ class PokemonDataScreen:
         self.pokemon_team = pokemon_team  # El equipo de Pokémon
         self.selected_pokemon_index = selected_pokemon_index  # Índice del Pokémon actualmente seleccionado
         self.selected_pokemon = pokemon_team[selected_pokemon_index]  # El Pokémon seleccionado actualmente
+        self.combat = combat  # Instancia del combate (si la hay)
 
         self.current_tab = self.TAB_INFO  # Pestaña abierta por defecto
         self.selected_move_index = None  # Índice del movimiento seleccionado
@@ -79,6 +80,8 @@ class PokemonDataScreen:
                     self.selected_move_index = None  # Des-seleccionar movimiento
                 else:
                     from game.screen.pokemon_menu_screen import PokemonMenuScreen
+                    if self.combat:
+                        return PokemonMenuScreen(self.player, self.combat)
                     return PokemonMenuScreen(self.player)
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -113,6 +116,8 @@ class PokemonDataScreen:
                 self.selected_move_index = None  # Des-seleccionar el movimiento
             else:
                 from game.screen.pokemon_menu_screen import PokemonMenuScreen
+                if self.combat:
+                    return PokemonMenuScreen(self.player, self.combat)
                 return PokemonMenuScreen(self.player)
 
         return self

@@ -1091,6 +1091,127 @@ def draw_exp_bar(screen, pokemon, position, box_width, box_height, colors):
 
 
 """
+FUNCIONES PARA CREAR EL MENU DE OPCIONES EN COMBATE
+"""
+
+
+def draw_action_menu(screen, mouse_pos):
+    """Dibuja el menú de acciones con 4 opciones estilizadas y devuelve los rects."""
+    menu_x = 412
+    menu_y = 460
+    menu_width = 367
+    menu_height = 117
+
+    # Colores de fondo personalizados para cada opción
+    option_colors = [
+        (178, 34, 34),
+        (255, 165, 0),
+        (60, 179, 113),
+        (70, 130, 180)
+    ]
+
+    # Colores para bordes
+    white_border_color = (255, 255, 255)
+    black_border_color = (0, 0, 0)
+    shadow_color = (50, 50, 50)
+
+    # Opciones del menú
+    options = ["FIGHT", "BAG", "POKÉMON", "RUN"]
+
+    # Fuente para el texto
+    font = pygame.font.Font(utils.load_font(), 42)
+
+    option_rects = []
+
+    # Dibujar las 4 cajas (2x2)
+    box_padding = 10
+    corner_radius = 15
+
+    for i, option in enumerate(options):
+        box_x = menu_x + (i % 2) * (menu_width // 2 + box_padding)
+        box_y = menu_y + (i // 2) * (menu_height // 2 + box_padding)
+
+        # Crear el rect de la caja
+        box_rect = pygame.Rect(box_x, box_y, menu_width // 2, menu_height // 2)
+        option_rects.append(box_rect)
+
+        # Sombra
+        pygame.draw.rect(screen, shadow_color, box_rect.move(5, 5).inflate(6, 6), border_radius=corner_radius)
+
+        # Efecto hover
+        if box_rect.collidepoint(mouse_pos):
+            hover_color = tuple(min(c + 30, 255) for c in option_colors[i])
+        else:
+            hover_color = option_colors[i]
+
+        # Dibujar el borde externo negro grueso
+        pygame.draw.rect(screen, black_border_color, box_rect.inflate(6, 6), border_radius=corner_radius, width=10)
+
+        # Dibujar el borde interno blanco
+        pygame.draw.rect(screen, white_border_color, box_rect.inflate(4, 4), border_radius=corner_radius, width=6)
+
+        pygame.draw.rect(screen, hover_color, box_rect, border_radius=corner_radius)
+
+        # Renderizar el texto y colocarlo en el centro de la caja
+        text_surface = font.render(option, True, (255, 255, 255))
+        text_rect = text_surface.get_rect(center=box_rect.center)
+        screen.blit(text_surface, text_rect)
+
+    return option_rects
+
+
+class PokemonCombatMovement:
+    def __init__(self, start_pos, end_pos, speed=8, callback_on_complete=None):
+        """
+        Inicializa el administrador de movimientos.
+
+        :param start_pos: Tupla con la posición inicial (x, y).
+        :param end_pos: Tupla con la posición final (x, y).
+        :param speed: Velocidad de movimiento en píxeles por frame.
+        :param callback_on_complete: Función opcional que se llama cuando se completa el movimiento.
+        """
+        self.current_pos = list(start_pos)
+        self.end_pos = list(end_pos)
+        self.speed = speed
+        self.movement_complete = False
+        self.callback_on_complete = callback_on_complete
+
+    def update(self):
+        """Actualiza la posición de la entidad moviéndola hacia su destino."""
+        if not self.movement_complete:
+            # Calcular la distancia restante
+            dx = self.end_pos[0] - self.current_pos[0]
+            dy = self.end_pos[1] - self.current_pos[1]
+
+            # Si está cerca del destino, ajustamos la posición directamente
+            if abs(dx) < self.speed:
+                self.current_pos[0] = self.end_pos[0]
+            else:
+                # Mueve hacia la dirección x
+                self.current_pos[0] += self.speed if dx > 0 else -self.speed
+
+            if abs(dy) < self.speed:
+                self.current_pos[1] = self.end_pos[1]
+            else:
+                # Mueve hacia la dirección y
+                self.current_pos[1] += self.speed if dy > 0 else -self.speed
+
+            # Verifica si ha llegado a la posición final
+            if self.current_pos == self.end_pos:
+                self.movement_complete = True
+                if self.callback_on_complete:
+                    self.callback_on_complete()
+
+    def has_completed(self):
+        """Devuelve True si el movimiento ha sido completado."""
+        return self.movement_complete
+
+    def get_position(self):
+        """Devuelve la posición actual del objeto que se está moviendo."""
+        return self.current_pos
+
+
+"""
 GUARDADO DE PARTIDA
 """
 

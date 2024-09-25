@@ -2,6 +2,7 @@ import pygame
 import game.utils as utils
 import game.ui as ui
 from game.dialogue_manager import DialogueManager, TextDisplayManager
+from game.save_load_manager import SaveLoadManager
 
 
 class SaveGameScreen:
@@ -30,7 +31,7 @@ class SaveGameScreen:
     def handle_events(self, event):
         """Maneja los eventos del teclado y ratón."""
         if event.type == pygame.KEYDOWN:
-            if self.saving_timer is not None:
+            if self.saving_timer is not None or not self.text_display_manager.is_dialogue_complete():
                 return self
             if event.key == pygame.K_RETURN:
                 return self.handle_return_key()
