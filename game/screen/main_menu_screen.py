@@ -61,9 +61,12 @@ class MainMenuScreen:
     def handle_button_click(self, button_name):
         """Acciones cuando se hace clic en un botón."""
         if button_name == "fight":
-            pokemon_date_list = pokemon.load_pokemon_data()
-            enemy_pokemon = pokemon.create_random_pokemon(pokemon_date_list)
-            return CombatTransitionScreen(self.player, enemy_pokemon)
+            if not self.player.has_alive_pokemon():
+                print("No tienes pokemon vivos")
+            else:
+                pokemon_date_list = pokemon.load_pokemon_data()
+                enemy_pokemon = pokemon.create_random_pokemon(pokemon_date_list)
+                return CombatTransitionScreen(self.player, enemy_pokemon)
         elif button_name == "pokemon":
             return PokemonMenuScreen(self.player)
         elif button_name == "bag":

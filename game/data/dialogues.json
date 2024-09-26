@@ -6,7 +6,13 @@
             ],
         "actions": [
             "What will {player_pokemon} do?"
-        ]
+        ],
+        "escaped": [
+            "You successfully escaped!"
+        ],
+        "failed_escape": [
+            "You couldn't escape!"
+    ]
 
     },
     "professor": {

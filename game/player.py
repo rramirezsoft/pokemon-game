@@ -41,7 +41,7 @@ class Player:
 
     def add_pokemon(self, pokemon):
         self.see_pokemon(pokemon)
-        self.pokedex_captured.add(pokemon)
+        self.pokedex_captured.add(pokemon.name)
         self.pokemons.append(pokemon)
 
     def get_starter(self, pokemon_name):
@@ -96,6 +96,10 @@ class Player:
         for pokemon in self.pokemons:
             pokemon.status = None  # Restablece el estado del Pokémon a 'None'
         print("Todos tus Pokémon han sido curados.")
+
+    def has_alive_pokemon(self):
+        """Verifica si el jugador tiene Pokémon vivos."""
+        return any(pokemon.current_hp > 0 for pokemon in self.pokemons)
 
     def get_badge(self, badge_name):
         """Añade una insignia al jugador."""

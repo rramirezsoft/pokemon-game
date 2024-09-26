@@ -10,12 +10,12 @@ class CombatScreen:
     def __init__(self, player, enemy_pokemon):
         """Inicializa la pantalla de combate."""
         self.player = player
-        self.player_current_pokemon = player.pokemons[0]
         self.enemy_pokemon = enemy_pokemon
         self.font = pygame.font.Font(utils.load_font(), 40)
         self.background_color = (232, 210, 224)
 
         self.combat = Combat(self.player, enemy_pokemon)  # Iniciamos el combate
+        self.player_current_pokemon = self.combat.current_pokemon
 
         # Sistema de diálogos
         self.dialogue_manager = DialogueManager(
@@ -73,6 +73,8 @@ class CombatScreen:
         self.player_pokemon_scale_factor = 0.6
         self.enemy_pokemon_scale_factor = 0.4
 
+        self.combat_over = False # Estado del combate (en curso/terminado)
+
     def change_stage(self, new_stage, placeholders=None):
         """Cambia el estado del combate y actualiza los diálogos."""
         placeholders = placeholders or {}
@@ -96,7 +98,6 @@ class CombatScreen:
     def on_player_pokemon_moved(self):
         """Callback cuando el Pokémon del jugador completa su movimiento."""
         self.player_pokemon_moved = True
-        print("Pokémon del jugador se ha movido.")
 
     def handle_events(self, event):
         """Maneja los eventos de la pantalla de combate."""
@@ -120,6 +121,12 @@ class CombatScreen:
                         if self.dialogue_stage == "encounter" and self.player_pokemon_moved:
                             self.change_stage("actions", {"player_pokemon": self.player_current_pokemon.name})
 
+                # Verificar si estamos en el estado 'escaped' y el jugador presionó Enter
+                if self.dialogue_stage == "escaped":
+                    self.combat_over = True
+                    from game.screen.main_menu_screen import MainMenuScreen
+                    return MainMenuScreen(self.player)
+
             # Si el menú de acciones está activo puedes clickar en las cajas
             if event.type == pygame.MOUSEBUTTONDOWN and self.action_stage:
                 mouse_pos = pygame.mouse.get_pos()
@@ -133,12 +140,16 @@ class CombatScreen:
                             from game.screen.pokemon_menu_screen import PokemonMenuScreen
                             return PokemonMenuScreen(self.player, self)
                         elif i == 3:
-                            print("Run")
+                            escaped = self.combat.attempt_escape()
+                            if escaped:
+                                self.change_stage("escaped")
+                            else:
+                                self.change_stage("failed_escape")
+
         return self
 
     def update(self):
         """Actualiza el estado de la pantalla de combate."""
-
         self.enemy_pokemon_movement.update()
         if self.enemy_moved:
             self.enemy_box_movement.update()
@@ -146,7 +157,6 @@ class CombatScreen:
         if self.enemy_moved and not self.waiting_for_move_player_pokemon:
             self.player_pokemon_movement.update()
         if self.player_pokemon_moved:
-            print(f"Posición de la caja del jugador: {self.player_box_movement.get_position()}")
             self.player_box_movement.update()
 
         # Actualizar el sistema de diálogo
