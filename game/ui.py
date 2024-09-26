@@ -948,6 +948,64 @@ def draw_text_in_rect(screen, position, line_height, text_values, font, rect_wid
         screen.blit(value_surface, value_rect)
 
 
+def start_battle_transition(player, enemy_pokemon):
+    """Realiza la animación de transición de combate y luego inicia la batalla."""
+    pokeball_image = utils.load_image("../assets/img/icons/pokeball.png")
+
+    # Configuración inicial de la animación
+    initial_size = 40
+    final_size = max(pygame.display.get_surface().get_width(),
+                     pygame.display.get_surface().get_height()) * 1.8
+    rotation_angle = 0
+    size = initial_size
+    transition_complete = False
+
+    screen = pygame.display.get_surface()
+
+    # Ciclo para la animación
+    running = True
+    clock = pygame.time.Clock()
+
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        if not transition_complete:
+            # Incrementar el tamaño de la Pokéball
+            size_increment = 15
+            size += size_increment
+            if size >= final_size:
+                size = final_size
+                transition_complete = True
+
+            # Actualizar el ángulo de rotación
+            rotation_angle += 4
+            if rotation_angle >= 360:
+                rotation_angle -= 360
+
+            # Dibujar la Pokébola escalada y rotada
+            pokeball_scaled = pygame.transform.scale(pokeball_image, (size, size))
+            pokeball_rotated = pygame.transform.rotate(pokeball_scaled, rotation_angle)
+
+            # Centrar la imagen en la pantalla
+            x = (pygame.display.get_surface().get_width() - size) // 2
+            y = (pygame.display.get_surface().get_height() - size) // 2
+            rotated_rect = pokeball_rotated.get_rect(center=(x + size // 2, y + size // 2))
+
+            # Limpiar la pantalla y dibujar la Pokéball
+            screen.fill((0, 0, 0))
+            screen.blit(pokeball_rotated, rotated_rect.topleft)
+            pygame.display.flip()
+
+        # Si la animación terminó, cambiar a la pantalla de combate
+        if transition_complete:
+            from game.screen.combat_screen import CombatScreen
+            return CombatScreen(player, enemy_pokemon)
+
+        clock.tick(60)
+
+
 """
 Funciones para dibujar las cajas de información de los Pokémon en lso combates.
 """

@@ -1,9 +1,7 @@
 import pygame
 from game import utils
-from game.screen.combat_transition_screen import CombatTransitionScreen
-from game.screen.combat_screen import CombatScreen
 from game.screen.save_game_screen import SaveGameScreen
-from game.ui import Button
+import game.ui as ui
 from game.screen.pokemon_menu_screen import PokemonMenuScreen
 from game.sounds import SoundManager
 import game.pokemon as pokemon
@@ -33,14 +31,14 @@ class MainMenuScreen:
 
         # Crear botones con posiciones ajustadas y dimensiones más pequeñas
         self.buttons = {
-            "fight": Button("Fight", (80, 80, 150, 100), self.font, self.button_images["fight"]),
-            "pokemon": Button("Pokémon", (280, 80, 150, 100), self.font, self.button_images["pokemon"]),
-            "bag": Button("Bag", (80, 200, 150, 100), self.font, self.button_images["bag"]),
-            "shop": Button("Shop", (280, 200, 150, 100), self.font, self.button_images["shop"]),
-            "pokedex": Button("Pokédex", (80, 320, 150, 100), self.font, self.button_images["pokedex"]),
-            "player": Button(self.player.name, (280, 320, 150, 100), self.font, self.button_images["player"]),
-            "options": Button("Settings", (80, 440, 150, 100), self.font, self.button_images["options"]),
-            "save": Button("Save", (280, 440, 150, 100), self.font, self.button_images["save"]),
+            "fight": ui.Button("Fight", (80, 80, 150, 100), self.font, self.button_images["fight"]),
+            "pokemon": ui.Button("Pokémon", (280, 80, 150, 100), self.font, self.button_images["pokemon"]),
+            "bag": ui.Button("Bag", (80, 200, 150, 100), self.font, self.button_images["bag"]),
+            "shop": ui.Button("Shop", (280, 200, 150, 100), self.font, self.button_images["shop"]),
+            "pokedex": ui.Button("Pokédex", (80, 320, 150, 100), self.font, self.button_images["pokedex"]),
+            "player": ui.Button(self.player.name, (280, 320, 150, 100), self.font, self.button_images["player"]),
+            "options": ui.Button("Settings", (80, 440, 150, 100), self.font, self.button_images["options"]),
+            "save": ui.Button("Save", (280, 440, 150, 100), self.font, self.button_images["save"]),
         }
 
         # Música
@@ -66,7 +64,7 @@ class MainMenuScreen:
             else:
                 pokemon_date_list = pokemon.load_pokemon_data()
                 enemy_pokemon = pokemon.create_random_pokemon(pokemon_date_list)
-                return CombatTransitionScreen(self.player, enemy_pokemon)
+                return ui.start_battle_transition(self.player, enemy_pokemon)
         elif button_name == "pokemon":
             return PokemonMenuScreen(self.player)
         elif button_name == "bag":
