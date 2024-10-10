@@ -18,4 +18,3 @@ class Combat:
 
         return escape_chance >= random_number
 
-

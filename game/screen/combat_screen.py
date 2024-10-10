@@ -73,7 +73,7 @@ class CombatScreen:
         self.player_pokemon_scale_factor = 0.6
         self.enemy_pokemon_scale_factor = 0.4
 
-        self.combat_over = False # Estado del combate (en curso/terminado)
+        self.combat_over = False  # Estado del combate (en curso/terminado)
 
     def change_stage(self, new_stage, placeholders=None):
         """Cambia el estado del combate y actualiza los diálogos."""
@@ -186,9 +186,10 @@ class CombatScreen:
                                               self.player_box_movement.get_position(), is_player_pokemon=True)
 
         # Dibujar el recuadro para el texto y mostrar el texto dentro
-        dialog_box_width = 792
         if self.action_stage:
             dialog_box_width = 400
             self.option_rects = ui.draw_action_menu(screen, pygame.mouse.get_pos())
+        else:
+            dialog_box_width = 792
         ui.draw_dialog_box(screen, box_width=dialog_box_width)
         self.text_display_manager.draw(screen)

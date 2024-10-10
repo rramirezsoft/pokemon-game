@@ -26,7 +26,7 @@ class TitleScreen:
         """Maneja los eventos del teclado."""
         if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
             self.sound_manager.stop_music()
-            return LoadGameScreen()  # Cambia a la pantalla para elegir nombre
+            return OakIntroScreen()  # Cambia a la pantalla para elegir nombre
         return self
 
     def update(self):

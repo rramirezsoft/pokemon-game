@@ -7,6 +7,12 @@
         "actions": [
             "What will {player_pokemon} do?"
         ],
+        "player_attack": [
+            "{player_pokemon} used {movement}"
+        ],
+        "enemy_attack": [
+            "Wild {enemy_pokemon} used {movement}"
+        ],
         "escaped": [
             "You successfully escaped!"
         ],

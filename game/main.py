@@ -20,7 +20,7 @@ def main():
     player.pokemons[0].current_hp = 0
     player.pokemons[0].experience = 40
     pokemon_data_list = pok.load_pokemon_data()
-    for i in range(5):
+    for i in range(9):
         new_pokemon = pok.create_random_pokemon(pokemon_data_list)
         player.add_pokemon(new_pokemon)
     current_screen = MainMenuScreen(player)  # Pantalla inicial

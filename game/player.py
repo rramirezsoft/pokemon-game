@@ -32,7 +32,8 @@ class Player:
     def __init__(self, name):
         self.name = name  # Nombre del jugador
         self.bag = Bag()  # Objeto bolsa con todos sus elementos dentro
-        self.pokemons = []  # lista de pokemon en el equipo
+        self.pokemons = []  # lista de pokemon en el equipo (max 6)
+        self.pc = []  # Resto de los pokemon que estan en el pc
         self.badges = []  # Medallas obtenidas
         self.money = 0  # Dinero actual
         self.pokedex_seen = set()  # Pokémon avistados
@@ -41,8 +42,13 @@ class Player:
 
     def add_pokemon(self, pokemon):
         self.see_pokemon(pokemon)
-        self.pokedex_captured.add(pokemon.name)
-        self.pokemons.append(pokemon)
+        if pokemon.name not in self.pokedex_captured:
+            self.pokedex_captured.add(pokemon.name)
+        # Verificar si el equipo está lleno
+        if len(self.pokemons) < 6:
+            self.pokemons.append(pokemon)
+        else:
+            self.pc.append(pokemon)
 
     def get_starter(self, pokemon_name):
         """Elige el pokemon inicial y lo añade a la lista de Pokémon del jugador."""
@@ -64,7 +70,12 @@ class Player:
         if self.bag.get_item_amount('pokeballs') > 0:
             self.bag.use_item('pokeballs', 1)
             self.pokedex_captured.add(pokemon.name)
-            self.pokemons.append(pokemon)
+
+            if len(self.pokemons) < 6:
+                self.pokemons.append(pokemon)
+            else:
+                self.pc.append(pokemon)
+
             return True
         else:
             print("No tienes Poké Balls suficientes.")
