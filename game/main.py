@@ -16,7 +16,7 @@ def main():
 
 
     player = Player("RAUL")
-    player.get_starter("charmander")
+    player.get_starter("bulbasaur")
     player.pokemons[0].current_hp = 0
     player.pokemons[0].experience = 40
     pokemon_data_list = pok.load_pokemon_data()

@@ -8,7 +8,7 @@ import pygame
 class Pokemon:
     generated_ids = set()  # Set para almacenar todos los IDs generados
 
-    def __init__(self, name, types, base_stats, evs, moves, height, weight, level=None, status=None):
+    def __init__(self, name, types, base_stats, evs, moves, height, weight, pokedex_id, level=None, status=None):
         self.name = name
         self.types = types
         self.base_stats = base_stats
@@ -26,6 +26,7 @@ class Pokemon:
         self.current_stats = self.max_stats.copy()  # Inicializar los HP actuales al máximo
         self.current_hp = self.current_stats.get('hp', 0)  # Inicializar HP actuales
         self.id = self.generate_id()  # Generamos un id unico de 6 cifras a cada pokemon
+        self.pokedex_id = pokedex_id  # Almacenar el ID de la Pokédex
 
     @staticmethod
     def generate_ivs():
@@ -114,6 +115,7 @@ class Pokemon:
         moves = pokemon_data['moves']
         height = pokemon_data['physical_attributes']['height']
         weight = pokemon_data['physical_attributes']['weight']
+        pokedex_id = pokemon_data['id']
         return cls(name, types, base_stats, evs, moves, height, weight, level)
 
     def load_image(self, desired_size=None):
@@ -146,7 +148,7 @@ class Pokemon:
         return pil_image.resize(size, Image.Resampling.LANCZOS)
 
 
-def load_pokemon_data(file_path='data/pokemon_data.json'):
+def load_pokemon_data(file_path='data/poke_data.json'):
     """Cargar la lista de datos de Pokémon desde un archivo JSON."""
     with open(file_path, 'r') as file:
         return json.load(file)
