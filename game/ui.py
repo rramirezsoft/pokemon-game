@@ -948,6 +948,71 @@ def draw_text_in_rect(screen, position, line_height, text_values, font, rect_wid
         screen.blit(value_surface, value_rect)
 
 
+def draw_description(screen, description, start_x, start_y, rect_width, rect_height, font_size, padding=10):
+    """
+    Dibuja una caja de descripción.
+
+    :param screen: La superficie en la que dibujar.
+    :param description: El texto de la descripción del movimiento.
+    :param start_x: La posición X inicial para el rectángulo.
+    :param start_y: La posición Y inicial para el rectángulo.
+    :param rect_width: El ancho del rectángulo.
+    :param rect_height: La altura del rectángulo.
+    :param font_size: Tamaño de la fuente para el texto.
+    :param padding: El espacio entre el rectángulo y el texto.
+    """
+    # Dibuja el rectángulo blanco para la descripción
+    rect = pygame.Rect(start_x, start_y, rect_width, rect_height)
+    pygame.draw.rect(screen, (255, 255, 255), rect)
+
+    # Crear la fuente para el texto
+    font = pygame.font.Font("../assets/fonts/pokemon.ttf", font_size)
+
+    # Ajustar el texto
+    wrapped_text = wrap_text(description, font, rect_width - 2 * padding)
+    line_height = font.size("Tg")[1]
+
+    # Calcular la altura total del texto para centrarlo
+    total_text_height = len(wrapped_text) * line_height
+    text_y = start_y + (rect_height - total_text_height) // 2
+
+    # Dibujar cada línea de texto centrada horizontalmente
+    for i, line in enumerate(wrapped_text):
+        line_surface = font.render(line, True, (0, 0, 0))
+
+        # Calcular posición centrada horizontalmente para cada línea
+        text_x = start_x + (rect_width - line_surface.get_width()) // 2
+        line_rect = line_surface.get_rect(topleft=(text_x, text_y + i * line_height))
+        screen.blit(line_surface, line_rect)
+
+
+def wrap_text(text, font, max_width):
+    """
+    Ajusta el texto para que quepa dentro del ancho máximo especificado.
+
+    :param text: El texto a ajustar.
+    :param font: La fuente utilizada para medir el texto.
+    :param max_width: El ancho máximo en el que el texto debe caber.
+    :return: Una lista de líneas de texto ajustadas.
+    """
+    words = text.split(' ')
+    lines = []
+    current_line = ""
+
+    for word in words:
+        test_line = current_line + word + " "
+        if font.size(test_line)[0] <= max_width:
+            current_line = test_line
+        else:
+            lines.append(current_line.strip())
+            current_line = word + " "
+
+    if current_line:
+        lines.append(current_line.strip())
+
+    return lines
+
+
 def start_battle_transition(player, enemy_pokemon):
     """Realiza la animación de transición de combate y luego inicia la batalla."""
     pokeball_image = utils.load_image("../assets/img/icons/pokeball.png")

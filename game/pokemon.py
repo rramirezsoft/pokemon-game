@@ -116,7 +116,7 @@ class Pokemon:
         height = pokemon_data['physical_attributes']['height']
         weight = pokemon_data['physical_attributes']['weight']
         pokedex_id = pokemon_data['id']
-        return cls(name, types, base_stats, evs, moves, height, weight, level)
+        return cls(name, types, base_stats, evs, moves, height, weight, pokedex_id, level)
 
     def load_image(self, desired_size=None):
         """Carga la imagen del Pokémon a su tamaño original y la redimensiona si es necesario."""

@@ -14,15 +14,15 @@ def main():
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     pygame.display.set_caption("Pokémon Game")
 
-
     player = Player("RAUL")
-    player.get_starter("bulbasaur")
-    player.pokemons[0].current_hp = 0
+    player.get_starter("kyurem")
+    player.pokemons[0].current_hp = 30
     player.pokemons[0].experience = 40
     pokemon_data_list = pok.load_pokemon_data()
     for i in range(9):
         new_pokemon = pok.create_random_pokemon(pokemon_data_list)
         player.add_pokemon(new_pokemon)
+        print(f"Añadido pokemon {new_pokemon.name} con nº de pokedex {new_pokemon.pokedex_id}")
     current_screen = MainMenuScreen(player)  # Pantalla inicial
 
     #current_screen = TitleScreen()

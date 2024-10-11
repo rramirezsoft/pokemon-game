@@ -19,7 +19,7 @@ class SoundManager:
             "battle": "../assets/sound/battle.mp3",
             "jubilife_city": "../assets/sound/jubilife_city.mp3",
             "lake": "../assets/sound/lake.mp3",
-            "sangem_town": "../assets/sound/sandgem_town.mp3",
+            "sandgem_town": "../assets/sound/sandgem_town.mp3",
             "twinleaf_town": "../assets/sound/twinleaf_town.mp3",
             "vitory": "../assets/sound/vitory.mp3"
         }

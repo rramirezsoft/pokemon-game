@@ -15,6 +15,7 @@ VERSION_GROUP = 'black-white'
 session = requests.Session()
 session.headers.update({'User-Agent': 'PokeAPI Client'})
 
+
 def get_pokemon_data(pokemon_name_or_id, retries=3, delay=5):
     """Obtiene los datos básicos de un Pokémon"""
     url = f"{POKEAPI_BASE_URL}{pokemon_name_or_id}"
@@ -216,8 +217,3 @@ def collect_pokemon():
         json.dump(all_pokemon_data, file, indent=4)
 
     print("Datos de los Pokémon de las generaciones 1 a 5 guardados en 'poke_data.json'")
-
-
-if __name__ == "__main__":
-    collect_pokemon()
-

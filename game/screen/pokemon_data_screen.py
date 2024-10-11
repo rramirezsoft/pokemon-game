@@ -205,9 +205,14 @@ class PokemonDataScreen:
                 text_values = {
                     "Class": move.get('damage_class', 'N/A'),
                     "Power": move.get('power', 'N/A'),
-                    "Accuracy": move.get('accuracy', 'N/A')
+                    "Accuracy": move.get('accuracy', 'N/A'),
                 }
                 ui.draw_rectangles(screen, 0, 320, 430, 40, 3, 0, (255, 255, 255), 24, text_values)
+
+                # Dibujar la descripción del movimiento justo debajo
+                description = move.get('description', 'No description available.')
+                ui.draw_description(screen, description, 0, 449, 430, 100,
+                                    24)
 
         # Dibujar el footer
         self.footer.draw(screen)
