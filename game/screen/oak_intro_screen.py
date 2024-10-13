@@ -188,3 +188,5 @@ class OakIntroScreen:
             confirmation_box_position = (screen.get_width() - 145, box_position[1] - 140)
             utils.draw_confirmation_box(screen, self.selected_confirmation_option,
                                         position=confirmation_box_position)
+
+        pygame.display.flip()

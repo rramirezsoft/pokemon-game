@@ -1,3 +1,5 @@
+import os
+
 import pygame
 import pygame.gfxdraw
 import math
@@ -501,45 +503,48 @@ class MiniMenu:
         return None  # No se hizo clic en ninguna opción
 
 
-def draw_pokemon_background(screen, triangle_points, stripe_points, pokeball_position, pokemon_size):
+def draw_pokemon_background(screen, triangle_points, stripe_points, img_position, img_size,
+                            img_path="../assets/img/pokemon_menu/info.png", angle_rotation=15,
+                            background_color=(233, 239, 255), triangle_color=(227, 49, 63), stripe_color=(196, 40, 53)):
     """
-    Dibuja un fondo personalizado para el menú de equipo Pokémon.
+    Dibuja un fondo para el menú de equipo Pokémon.
 
     :param screen: Superficie de pygame en la que se dibuja el fondo.
     :param triangle_points: Lista de puntos (x, y) para el triángulo rojo.
     :param stripe_points: Lista de puntos (x, y) para la franja diagonal en rojo oscuro.
-    :param pokeball_position: Tupla (x, y) para la posición de la Pokéball.
-    :param pokemon_size: Tamaño de la pokeball
+    :param img_position: Tupla (x, y) para la posición de la Pokéball.
+    :param img_size: Tamaño de la pokeball
+    :param img_path: Ruta de la imagen de fondo.
+    :param angle_rotation: Ángulo de rotación de la imagen.
+    :param background_color: Color de fondo.
+    :param triangle_color: Color del triángulo.
+    :param stripe_color: Color de la franja diagonal
     """
-    # Definir los colores
-    red_color = (227, 49, 63)
-    dark_red_color = (196, 40, 53)
-    soft_blue_gray = (233, 239, 255)
 
     # Obtener el tamaño de la pantalla
-    screen.fill(soft_blue_gray)
+    screen.fill(background_color)
 
     # Dibujar el triángulo rojo brillante
-    pygame.draw.polygon(screen, red_color, triangle_points)
+    pygame.draw.polygon(screen, triangle_color, triangle_points)
 
     # Dibujar la franja diagonal en rojo oscuro que sea paralela al triángulo
-    pygame.draw.polygon(screen, dark_red_color, stripe_points)
+    pygame.draw.polygon(screen, stripe_color, stripe_points)
 
     # Dibujar la pokeball de fondo.
-    pokeball_image = pygame.image.load('../assets/img/pokemon_menu/info.png')
+    image = pygame.image.load(img_path)
 
     # Escalar la imagen de la Pokéball a 600px
-    pokeball_scaled = pygame.transform.scale(pokeball_image, pokemon_size)
+    img_scaled = pygame.transform.scale(image, img_size)
 
     # Girar la imagen de la Pokéball un poco (por ejemplo, 15 grados)
-    pokeball_rotated = pygame.transform.rotate(pokeball_scaled, 15)
+    img_rotated = pygame.transform.rotate(img_scaled, angle_rotation)
 
     # Obtener el rectángulo de la imagen rotada para centrarla correctamente
-    pokeball_rect = pokeball_rotated.get_rect()
-    pokeball_rect.topleft = pokeball_position
+    img_rect = img_rotated.get_rect()
+    img_rect.topleft = img_position
 
     # Dibujar la imagen de la Pokéball
-    screen.blit(pokeball_rotated, pokeball_rect.topleft)
+    screen.blit(img_rotated, img_rect.topleft)
 
 
 def draw_interactive_arrow(screen, coords, color, action=None):
@@ -1433,3 +1438,139 @@ def draw_save_game_box(screen, player, box_position=(30, 30), box_width=400, box
     playtime_text = font.render(player.get_playtime_formatted(), True, text_color)
     screen.blit(time_text, (left_x, pokemon_image_y + 40))
     screen.blit(playtime_text, (right_x - playtime_text.get_width(), pokemon_image_y + 40))
+
+
+def draw_pokedex_pokemon_slots(screen, player, pokemon_list, current_scroll_position, selected_index, font):
+    """Dibuja los slots de los Pokémon en la Pokédex"""
+
+    box_width, box_height = 330, 50  # Tamaño de las cajas
+    padding = 10  # Espacio entre las cajas
+    border_radius = 25  # Radio de las esquinas redondeadas
+    x_position = 460  # Posición en X donde se dibuja el primer slot
+    y_position = 80  # Posición en Y donde se empieza a dibujar
+
+    num_pokemon_visible = 8
+
+    for i, pokemon in enumerate(pokemon_list[current_scroll_position:current_scroll_position + num_pokemon_visible]):
+        # Determinar la posición Y para cada slot
+        y_pos = y_position + i * (box_height + padding)
+
+        # Si el slot es el seleccionado, dibujar la caja
+        if current_scroll_position + i == selected_index:
+            box_color = (0, 0, 0)
+            text_color = (255, 255, 255)
+
+            box_surface = pygame.Surface((box_width, box_height), pygame.SRCALPHA)
+            pygame.draw.rect(box_surface, box_color, box_surface.get_rect(), border_radius=border_radius)
+            screen.blit(box_surface, (x_position, y_pos))  # Dibujar la caja seleccionada
+        else:
+            # Si no está seleccionada, no dibujamos la caja
+            text_color = (0, 0, 0)
+
+        # Cargar y dibujar la imagen del Pokémon
+        img_path = f"../assets/pokemon_images/{pokemon['name'].lower()}.png"
+        if os.path.exists(img_path):
+            image = pygame.image.load(img_path)
+            image = pygame.transform.scale(image, (48, 48))
+            screen.blit(image, (x_position + 10, y_pos + (box_height - 48) // 2))
+
+        # Dibujar el número de Pokédex
+        pokedex_number = font.render(f"Nº. {pokemon['id']}", True, text_color)
+        screen.blit(pokedex_number, (x_position + 80, y_pos + (box_height - pokedex_number.get_height()) // 2))
+
+        # Dibujar el nombre del Pokémon
+        name_text = font.render(pokemon['name'].capitalize(), True, text_color)
+        screen.blit(name_text, (x_position + 160, y_pos + (box_height - name_text.get_height()) // 2))
+
+        # Verificar si el jugador tiene el Pokémon capturado
+        if pokemon['name'].capitalize() in player.pokedex_captured:
+            # Dibuja la Poké Ball a la derecha del slot
+            pokeball_image_path = "../assets/img/icons/pokeball.png"
+            pokeball_image = pygame.image.load(pokeball_image_path)
+            pokeball_image = pygame.transform.scale(pokeball_image, (28, 28))
+            screen.blit(pokeball_image, (x_position + box_width - 40, y_pos + (box_height - 32) // 2))
+
+    # Mostrar en grande el Pokémon seleccionado
+    if pokemon_list and 0 <= selected_index < len(pokemon_list):
+        selected_pokemon = pokemon_list[selected_index]
+
+        big_image_x = 35
+        big_image_y = 90
+
+        # Cargar y dibujar la imagen en tamaño grande
+        big_img_path = f"../assets/pokemon_images/{selected_pokemon['name'].lower()}.png"
+        if os.path.exists(big_img_path):
+            big_image = pygame.image.load(big_img_path)
+            big_image = pygame.transform.scale(big_image, (350, 350))
+            screen.blit(big_image, (big_image_x, big_image_y))
+
+
+def draw_scroll_bar(screen, pokemon_list, current_scroll_position, num_pokemon_visible):
+    """Dibuja la barra de desplazamiento en la Pokédex."""
+
+    total_pokemon = len(pokemon_list)
+    # Rect de la barra de desplazamiento
+    scroll_bar_width = 5
+    scroll_bar_height = 430
+    scroll_bar_x = 792
+    scroll_bar_y = 100
+
+    # Calcular la proporción del número de Pokémon visibles respecto al total
+    proportion = num_pokemon_visible / total_pokemon if total_pokemon > 0 else 0
+    visible_scroll_height = int(scroll_bar_height * proportion)
+
+    # Calcular la posición de la barra de desplazamiento
+    scroll_position = (current_scroll_position / (total_pokemon - num_pokemon_visible)) * (
+                scroll_bar_height - visible_scroll_height) if total_pokemon > num_pokemon_visible else 0
+
+    # Dibujar la barra de fondo
+    pygame.draw.rect(screen, (190, 2, 3), (scroll_bar_x, scroll_bar_y, scroll_bar_width, scroll_bar_height))
+
+    # Dibujar la barra visible
+    pygame.draw.rect(screen, (250, 82, 43),
+                     (scroll_bar_x, scroll_bar_y + scroll_position, scroll_bar_width, visible_scroll_height))
+
+
+def draw_pokedex_badges(screen, player, x, y, font, region_range,
+                        width=80, height=31, img_path="../assets/img/badges/corona.png", badge_type="captured"):
+    """
+    Dibuja una caja con el número de Pokémon avistados/capturados de la región actual.
+    """
+    # Definir el rect del rectángulo
+    rect = pygame.Rect(x, y, width, height)
+
+    # Colores
+    box_color = (88, 88, 88)
+    text_color = (255, 255, 255)
+
+    # Obtener la lista completa de Pokémon con sus IDs
+    pokemon_data = utils.load_pokemon_data()
+
+    # Filtrar los Pokémon por región usando sus nombres y mapeando a sus IDs
+    if badge_type == "captured":
+        pokemon_filtered = [p for p in pokemon_data if p['name'].capitalize()
+                            in player.pokedex_captured and region_range[0] <= p['id'] <= region_range[1]]
+    else:
+        pokemon_filtered = [p for p in pokemon_data if p['name'].capitalize()
+                            in player.pokedex_seen and region_range[0] <= p['id'] <= region_range[1]]
+
+    pokemon_count = len(pokemon_filtered)
+
+    # Cambiar el color de la caja si todos los Pokémon están capturados/avistados
+    if badge_type == "captured" and pokemon_count == (region_range[1] - region_range[0] + 1):
+        box_color = (218, 165, 32)
+    elif badge_type == "seen" and pokemon_count == (region_range[1] - region_range[0] + 1):
+        box_color = (218, 165, 32)
+
+    # Dibujar la caja con border_radius
+    pygame.draw.rect(screen, box_color, rect, border_radius=8)
+
+    # Cargar y dibujar la imagen si existe
+    if img_path and os.path.exists(img_path):
+        badge_image = pygame.image.load(img_path)
+        badge_image = pygame.transform.scale(badge_image, (rect.height - 10, rect.height - 10))
+        screen.blit(badge_image, (rect.x + 10, rect.y + 5))
+
+    # Dibujar el número de Pokémon capturados/avistados
+    count_text = font.render(f"{pokemon_count}", True, text_color)
+    screen.blit(count_text, (rect.x + rect.width - 32, rect.y + rect.height // 2 - count_text.get_height() // 2))

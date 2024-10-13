@@ -125,6 +125,8 @@ class ChooseNameScreen:
             screen.blit(text_surf, (rect.x + (rect.width - text_surf.get_width()) // 2,
                                     rect.y + (rect.height - text_surf.get_height()) // 2))
 
+        pygame.display.flip()
+
     def update(self):
         """Actualiza el estado de la pantalla."""
         pass

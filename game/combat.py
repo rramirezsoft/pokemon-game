@@ -16,5 +16,8 @@ class Combat:
         escape_chance = ((player_speed * 128) / enemy_speed) + 30
         random_number = random.randint(0, 255)
 
+        print(f"velocidad de mi pokemon {player_speed}\nVelocidad del pokemon enemigo {enemy_speed}"
+              f"\nProbabilidad de escapar {escape_chance}\nNumero aleatorio {random_number}")
+
         return escape_chance >= random_number
 

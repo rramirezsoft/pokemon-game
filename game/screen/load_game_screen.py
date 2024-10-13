@@ -17,3 +17,5 @@ class LoadGameScreen:
     def draw(self, screen):
         screen.fill(self.background_color)
         ui.draw_save_game_box(screen, self.player)
+
+        pygame.display.flip()

@@ -95,3 +95,5 @@ class SaveGameScreen:
                 box_width=140,
                 box_height=140
             )
+
+        pygame.display.flip()

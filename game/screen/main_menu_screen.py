@@ -3,6 +3,7 @@ from game import utils
 from game.screen.save_game_screen import SaveGameScreen
 import game.ui as ui
 from game.screen.pokemon_menu_screen import PokemonMenuScreen
+from game.screen.pokedex_screen import PokedexScreen
 from game.sounds import SoundManager
 import game.pokemon as pokemon
 
@@ -70,7 +71,7 @@ class MainMenuScreen:
         elif button_name == "bag":
             print("Abrir bolsa")
         elif button_name == "pokedex":
-            print("Abrir Pokédex")
+            return PokedexScreen(self.player)
         elif button_name == "player":
             print(f"Perfil de jugador: {self.player.name}")
         elif button_name == "options":
@@ -94,3 +95,5 @@ class MainMenuScreen:
         # Dibujar los botones
         for button in self.buttons.values():
             button.draw(screen)
+
+        pygame.display.flip()

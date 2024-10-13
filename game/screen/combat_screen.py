@@ -193,3 +193,5 @@ class CombatScreen:
             dialog_box_width = 792
         ui.draw_dialog_box(screen, box_width=dialog_box_width)
         self.text_display_manager.draw(screen)
+
+        pygame.display.flip()

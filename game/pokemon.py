@@ -108,7 +108,7 @@ class Pokemon:
     @classmethod
     def from_json(cls, pokemon_data, level=None):
         """Crear un Pokémon a partir de los datos en formato JSON."""
-        name = pokemon_data['name']
+        name = pokemon_data['name'].capitalize()
         types = pokemon_data['types']
         base_stats = {stat_name: stat_info['base_stat'] for stat_name, stat_info in pokemon_data['stats'].items()}
         evs = {stat_name: stat_info['evs'] for stat_name, stat_info in pokemon_data['stats'].items()}

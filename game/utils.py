@@ -1,3 +1,5 @@
+import json
+
 import pygame
 import os
 import ui
@@ -98,3 +100,9 @@ def draw_confirmation_box(screen, selected_option, position=(0, 0), box_width=14
         screen.blit(arrow_text, (yes_text_pos[0] - 20, yes_text_pos[1]))
     else:
         screen.blit(arrow_text, (no_text_pos[0] - 20, no_text_pos[1]))
+
+
+def load_pokemon_data(file_path='data/poke_data.json'):
+    """Cargar la lista de datos de Pokémon desde un archivo JSON."""
+    with open(file_path, 'r') as file:
+        return json.load(file)
