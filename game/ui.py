@@ -1440,7 +1440,8 @@ def draw_save_game_box(screen, player, box_position=(30, 30), box_width=400, box
     screen.blit(playtime_text, (right_x - playtime_text.get_width(), pokemon_image_y + 40))
 
 
-def draw_pokedex_pokemon_slots(screen, player, pokemon_list, current_scroll_position, selected_index, font):
+def draw_pokedex_pokemon_slots(screen, player, pokemon_list, region_name,
+                               region_offsets, current_scroll_position, selected_index, font):
     """Dibuja los slots de los Pokémon en la Pokédex"""
 
     box_width, box_height = 330, 50  # Tamaño de las cajas
@@ -1467,20 +1468,36 @@ def draw_pokedex_pokemon_slots(screen, player, pokemon_list, current_scroll_posi
             # Si no está seleccionada, no dibujamos la caja
             text_color = (0, 0, 0)
 
-        # Cargar y dibujar la imagen del Pokémon
-        img_path = f"../assets/pokemon_images/{pokemon['name'].lower()}.png"
-        if os.path.exists(img_path):
-            image = pygame.image.load(img_path)
-            image = pygame.transform.scale(image, (48, 48))
-            screen.blit(image, (x_position + 10, y_pos + (box_height - 48) // 2))
+        # Comprobar si el pokemon ha sido avistado
+        pokemon_seen = pokemon['name'].capitalize() in player.pokedex_seen
 
-        # Dibujar el número de Pokédex
-        pokedex_number = font.render(f"Nº. {pokemon['id']}", True, text_color)
-        screen.blit(pokedex_number, (x_position + 80, y_pos + (box_height - pokedex_number.get_height()) // 2))
+        # Si el Pokémon ha sido avistado, cargar su imagen y mostrar sus datos
+        if pokemon_seen:
+            # Cargar y dibujar la imagen del Pokémon
+            img_path = f"../assets/pokemon_images/{pokemon['name'].lower()}.png"
+            if os.path.exists(img_path):
+                image = pygame.image.load(img_path)
+                image = pygame.transform.scale(image, (48, 48))
+                screen.blit(image, (x_position + 10, y_pos + (box_height - 48) // 2))
 
-        # Dibujar el nombre del Pokémon
-        name_text = font.render(pokemon['name'].capitalize(), True, text_color)
-        screen.blit(name_text, (x_position + 160, y_pos + (box_height - name_text.get_height()) // 2))
+            # Calcular el id regional
+            offset = region_offsets.get(region_name, 0)
+            region_id = pokemon['id'] - offset
+
+            # Dibujar el id regional de Pokédex
+            pokedex_number = font.render(f"Nº. {region_id}", True, text_color)
+            screen.blit(pokedex_number, (x_position + 80, y_pos + (box_height - pokedex_number.get_height()) // 2))
+
+            # Dibujar el nombre del Pokémon
+            name_text = font.render(pokemon['name'].capitalize(), True, text_color)
+            screen.blit(name_text, (x_position + 160, y_pos + (box_height - name_text.get_height()) // 2))
+        else:
+            # Si el Pokémon no ha sido avistado, mostrar "???" en lugar del número y nombre
+            pokedex_number = font.render("Nº. ???", True, text_color)
+            screen.blit(pokedex_number, (x_position + 80, y_pos + (box_height - pokedex_number.get_height()) // 2))
+
+            name_text = font.render("???", True, text_color)
+            screen.blit(name_text, (x_position + 160, y_pos + (box_height - name_text.get_height()) // 2))
 
         # Verificar si el jugador tiene el Pokémon capturado
         if pokemon['name'].capitalize() in player.pokedex_captured:
@@ -1497,12 +1514,21 @@ def draw_pokedex_pokemon_slots(screen, player, pokemon_list, current_scroll_posi
         big_image_x = 35
         big_image_y = 90
 
-        # Cargar y dibujar la imagen en tamaño grande
-        big_img_path = f"../assets/pokemon_images/{selected_pokemon['name'].lower()}.png"
-        if os.path.exists(big_img_path):
-            big_image = pygame.image.load(big_img_path)
-            big_image = pygame.transform.scale(big_image, (350, 350))
-            screen.blit(big_image, (big_image_x, big_image_y))
+        # Comprobar si el Pokémon seleccionado ha sido avistado
+        if selected_pokemon['name'].capitalize() in player.pokedex_seen:
+            # Cargar y dibujar la imagen en tamaño grande
+            big_img_path = f"../assets/pokemon_images/{selected_pokemon['name'].lower()}.png"
+            if os.path.exists(big_img_path):
+                big_image = pygame.image.load(big_img_path)
+                big_image = pygame.transform.scale(big_image, (350, 350))
+                screen.blit(big_image, (big_image_x, big_image_y))
+        else:
+            # Si no ha sido avistado, mostrar una imagen de interrogación
+            mystery_image_path = "../assets/img/icons/question_mark.png"
+            if os.path.exists(mystery_image_path):
+                mystery_image = pygame.image.load(mystery_image_path)
+                mystery_image = pygame.transform.scale(mystery_image, (350, 350))
+                screen.blit(mystery_image, (big_image_x, big_image_y))
 
 
 def draw_scroll_bar(screen, pokemon_list, current_scroll_position, num_pokemon_visible):

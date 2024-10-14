@@ -6,6 +6,7 @@ class Combat:
         """Inicializa el combate con el jugador y el Pokémon enemigo."""
         self.player = player
         self.enemy_pokemon = enemy_pokemon
+        player.see_pokemon(self.enemy_pokemon)
         self.current_pokemon = next((pokemon for pokemon in self.player.pokemons if not pokemon.is_fainted()), None)
 
     def attempt_escape(self):

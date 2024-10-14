@@ -5,7 +5,9 @@ import time
 
 
 class PokedexScreen:
+
     REGIONS = ["Kanto", "Johto", "Hoenn", "Sinnoh", "Teselia", "Nacional"]
+
     REGION_ID_RANGES = {
         "Kanto": (1, 151),
         "Johto": (152, 251),
@@ -13,6 +15,15 @@ class PokedexScreen:
         "Sinnoh": (387, 493),
         "Teselia": (494, 649),
         "Nacional": (1, 649),
+    }
+
+    REGION_OFFSETS = {
+        "Kanto": 0,
+        "Johto": 151,
+        "Hoenn": 251,
+        "Sinnoh": 386,
+        "Teselia": 494,
+        "Nacional": 0
     }
 
     def __init__(self, player):
@@ -34,7 +45,7 @@ class PokedexScreen:
         self.is_scrolling = False
         self.scroll_direction = 0
         self.scroll_timer = 0
-        self.scroll_delay = 0.15
+        self.scroll_delay = 0.12
 
         self.footer = ui.Footer(text="Back")
         self.footer.footer_rect.topleft = (0, 575)
@@ -77,9 +88,9 @@ class PokedexScreen:
             mouse_pos = pygame.mouse.get_pos()
 
             if self.arrow_left_rect and self.arrow_left_rect.collidepoint(mouse_pos):
-                self.change_region(-1)
-            elif self.arrow_right_rect and self.arrow_right_rect.collidepoint(mouse_pos):
                 self.change_region(1)
+            elif self.arrow_right_rect and self.arrow_right_rect.collidepoint(mouse_pos):
+                self.change_region(-1)
 
             if self.footer.handle_events(event):
                 from game.screen.main_menu_screen import MainMenuScreen
@@ -162,8 +173,8 @@ class PokedexScreen:
 
         # Dibujar Pokémon visibles usando el nuevo método en ui
         ui.draw_pokedex_pokemon_slots(screen, self.player, self.filtered_pokemon_data,
-                                      self.current_scroll_position,
-                                      self.selected_index,
+                                      self.REGIONS[self.current_region_index], self.REGION_OFFSETS,
+                                      self.current_scroll_position, self.selected_index,
                                       pygame.font.Font(utils.load_font(), 24))
 
         # Dibujar la barra de desplazamiento

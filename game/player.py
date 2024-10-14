@@ -56,6 +56,7 @@ class Player:
         if starter_pokemon:
             self.see_pokemon(starter_pokemon)
             self.pokedex_captured.add(pokemon_name)
+            print(self.pokedex_captured)
             self.pokemons.append(starter_pokemon)
         else:
             print(f"No se pudo crear el Pokémon '{pokemon_name}'.")

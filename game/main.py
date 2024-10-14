@@ -5,7 +5,6 @@ from game.screen.main_menu_screen import MainMenuScreen
 from game.screen.title_screen import TitleScreen
 import game.pokemon as pok
 
-
 WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600  # Medidas de la pantalla
 
 
@@ -15,16 +14,15 @@ def main():
     pygame.display.set_caption("Pokémon Game")
 
     player = Player("RAUL")
-    player.get_starter("kyurem")
-    player.pokemons[0].current_hp = 30
-    player.pokemons[0].experience = 40
+    player.get_starter("Squirtle")
+    player.pokemons[0].experience = int(player.pokemons[0].experience_to_next_level / 2)
     pokemon_data_list = pok.load_pokemon_data()
-    for i in range(100):
+    for i in range(30):
         new_pokemon = pok.create_random_pokemon(pokemon_data_list)
         player.add_pokemon(new_pokemon)
     current_screen = MainMenuScreen(player)  # Pantalla inicial
 
-    #current_screen = TitleScreen()
+    # current_screen = TitleScreen()
 
     running = True
     while running:
