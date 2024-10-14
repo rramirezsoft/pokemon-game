@@ -650,9 +650,9 @@ def draw_info_tab(screen, rect, font_size, pokemon, player):
     # Renderizar el contenido en la mitad derecha del recuadro
     data = [
         pokemon.name,
-        pokemon.types,  # Esto es para las imágenes de tipos
+        pokemon.types,
         player.name,
-        pokemon.id,  # Para el ID No. puedes añadir un valor si lo tienes
+        pokemon.random_id,
         pokemon.experience,
         pokemon.experience_to_next_level
     ]
@@ -1340,16 +1340,17 @@ class PokemonCombatMovement:
 
 
 """
-GUARDADO DE PARTIDA
+GUARDAR/CARGAR PARTIDA
 """
 
 
-def draw_save_game_box(screen, player, box_position=(30, 30), box_width=400, box_height=300):
+def draw_save_load_game_box(screen, player, is_load=False, box_position=(30, 30), box_width=400, box_height=300):
     """
-    Dibuja una caja de información de guardado de juego con los detalles del jugador, equipo Pokémon y tiempo jugado.
+    Dibuja una caja de información de guardado o carga de juego
 
     :param screen: La pantalla en la que se va a dibujar.
     :param player: Objeto del jugador.
+    :param is_load: Indica si es para cargar (True) o guardar (False) partida.
     :param box_position: La posición superior izquierda de la caja.
     :param box_width: El ancho de la caja.
     :param box_height: La altura de la caja.
@@ -1370,7 +1371,7 @@ def draw_save_game_box(screen, player, box_position=(30, 30), box_width=400, box
     # Fuente
     font = pygame.font.Font(utils.load_font(), 35)
 
-    # Crear la superficie para el cuadro de guardado
+    # Crear la superficie para el cuadro de guardado/carga
     save_box_surface = pygame.Surface((box_width, box_height), pygame.SRCALPHA)
 
     # Dibujar el borde dorado exterior
@@ -1383,14 +1384,14 @@ def draw_save_game_box(screen, player, box_position=(30, 30), box_width=400, box
                       box_width - 2 * outer_border_thickness, box_height - 2 * outer_border_thickness),
                      border_radius=inner_border_radius, width=inner_border_thickness)
 
-    # Dibujar el relleno blanco dentro del cuadro de guardado
+    # Dibujar el relleno blanco dentro del cuadro de guardado/carga
     pygame.draw.rect(save_box_surface, fill_color,
                      (outer_border_thickness + inner_border_thickness, outer_border_thickness + inner_border_thickness,
                       box_width - 2 * (outer_border_thickness + inner_border_thickness),
                       box_height - 2 * (outer_border_thickness + inner_border_thickness)),
                      border_radius=5)
 
-    # Blit del cuadro de guardado en la superficie principal
+    # Blit del cuadro de guardado/carga en la superficie principal
     screen.blit(save_box_surface, box_position)
 
     # Posiciones de los títulos (izquierda) y valores (derecha)
@@ -1399,9 +1400,10 @@ def draw_save_game_box(screen, player, box_position=(30, 30), box_width=400, box
     start_y = box_position[1] + 70
     line_spacing = 45
 
-    # Dibujar el título en rojo centrado
-    title_text = font.render("POKÉMON GAME", True, red_color)
-    screen.blit(title_text, (box_position[0] + (box_width - title_text.get_width()) // 2, box_position[1] + 20))
+    # Cambia el título dependiendo de si es guardar o cargar
+    title_text = "LOAD GAME" if is_load else "SAVE GAME"
+    title_surface = font.render(title_text, True, red_color)
+    screen.blit(title_surface, (box_position[0] + (box_width - title_surface.get_width()) // 2, box_position[1] + 20))
 
     # 1. Dibujar la información del jugador en la parte izquierda (PLAYER)
     player_text = font.render("PLAYER:", True, text_color)

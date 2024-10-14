@@ -1,13 +1,15 @@
 import pygame
-
 from game.screen.load_game_screen import LoadGameScreen
-from game.utils import load_image, load_font, render_text
 from game.screen.oak_intro_screen import OakIntroScreen
+from game.utils import load_image, load_font, render_text
 from game.sounds import SoundManager
+from game.database_manager import DataBaseManager, MONGO_URI
 
 
 class TitleScreen:
+
     def __init__(self):
+        # Gráficos
         self.background_image = load_image("../assets/img/title/fondo.png", (800, 600))
         self.logo_image = load_image("../assets/img/title/logo_pokemon.png", (600, 250))
         self.pikachu_image = load_image("../assets/pokemon_images/pikachu.png", (350, 350))
@@ -22,11 +24,34 @@ class TitleScreen:
         self.sound_manager = SoundManager()
         self.sound_manager.play_music("opening")
 
+        # Inicializamos la base de datos
+        self.db_manager = DataBaseManager(MONGO_URI)
+        self.player = None  # Inicializamos un jugador a none
+
+    def check_if_player_id_exists(self):
+        """
+        Comprueba que hay un player_id en el data/player_id.txt,
+        y si lo hay, asumimos que tiene una partida guardada
+        """
+        player_id = self.db_manager.get_saved_player_id()
+
+        if player_id:
+            # Buscar al jugador en la base de datos con ese player_id
+            player_data = self.db_manager.collection.find_one({"player_id": int(player_id)})
+            if player_data:
+                self.player = self.db_manager.load_player(player_data)
+                return True
+            return False
+
     def handle_events(self, event):
         """Maneja los eventos del teclado."""
         if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
             self.sound_manager.stop_music()
-            return OakIntroScreen()  # Cambia a la pantalla para elegir nombre
+
+            if self.check_if_player_id_exists():
+                return LoadGameScreen(self.player)
+            return OakIntroScreen()
+
         return self
 
     def update(self):

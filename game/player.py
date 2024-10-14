@@ -1,4 +1,7 @@
+import random
+
 from game.pokemon import create_pokemon
+from game.database_manager import DataBaseManager, MONGO_URI
 
 
 class Bag:
@@ -30,15 +33,25 @@ class Bag:
 
 class Player:
     def __init__(self, name):
+        self.db_manager = DataBaseManager(MONGO_URI)  # Conexión a la base de datos
+
+        self.player_id = self.generate_unique_player_id()  # ID único para cada entrenador
         self.name = name  # Nombre del jugador
         self.bag = Bag()  # Objeto bolsa con todos sus elementos dentro
         self.pokemons = []  # lista de pokemon en el equipo (max 6)
-        self.pc = []  # Resto de los pokemon que estan en el pc
+        self.pc = []  # Resto de los pokemon que están en el pc
         self.badges = []  # Medallas obtenidas
         self.money = 0  # Dinero actual
         self.pokedex_seen = set()  # Pokémon avistados
         self.pokedex_captured = set()  # Pokémon capturados
         self.playtime_seconds = 0  # Tiempo jugado en segundos
+
+    def generate_unique_player_id(self):
+        """Genera un ID único de 6 cifras para el jugador."""
+        while True:
+            player_id = random.randint(100000, 999999)
+            if not self.db_manager.player_id_exists(player_id):  # Verifica que el ID no exista en la base de datos
+                return player_id
 
     def add_pokemon(self, pokemon):
         self.see_pokemon(pokemon)
@@ -56,7 +69,6 @@ class Player:
         if starter_pokemon:
             self.see_pokemon(starter_pokemon)
             self.pokedex_captured.add(pokemon_name)
-            print(self.pokedex_captured)
             self.pokemons.append(starter_pokemon)
         else:
             print(f"No se pudo crear el Pokémon '{pokemon_name}'.")

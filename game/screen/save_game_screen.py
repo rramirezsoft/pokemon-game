@@ -2,12 +2,14 @@ import pygame
 import game.utils as utils
 import game.ui as ui
 from game.dialogue_manager import DialogueManager, TextDisplayManager
-from game.save_load_manager import SaveLoadManager
+from game.database_manager import DataBaseManager, MONGO_URI
 
 
 class SaveGameScreen:
     def __init__(self, player):
         self.player = player
+
+        self.db_manager = DataBaseManager(MONGO_URI)  # Conexión con la base de datos
 
         # Cargar imagen de fondo
         self.background = utils.load_image("../assets/img/main_menu/fondo.png")
@@ -50,6 +52,7 @@ class SaveGameScreen:
                 self.current_line_index = 0
                 self.saving_timer = pygame.time.get_ticks() + 7000
                 self.set_dialog_text()
+                self.db_manager.save_player(self.player)
             elif self.selected_confirmation_option == 'no':
                 from game.screen.main_menu_screen import MainMenuScreen
                 return MainMenuScreen(self.player)
@@ -81,7 +84,7 @@ class SaveGameScreen:
         """Dibuja el fondo, cuadro de guardado, cuadro diálogo y opciones de confirmación."""
         screen.blit(self.background, (0, 0))
 
-        ui.draw_save_game_box(screen, self.player)
+        ui.draw_save_load_game_box(screen, self.player)
 
         ui.draw_dialog_box(screen)
         self.text_display_manager.draw(screen)

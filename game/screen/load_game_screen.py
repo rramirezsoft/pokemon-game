@@ -1,21 +1,26 @@
 import pygame
 import game.ui as ui
-from game.player import Player
+import game.utils as utils
+from game.screen.main_menu_screen import MainMenuScreen
 
 
 class LoadGameScreen:
-    def __init__(self):
-        self.background_color = (154, 214, 255)
-        self.player = Player("RAUL")
+    def __init__(self, player):
+        self.player = player
+        self.background_image = utils.load_image("../assets/img/main_menu/load_menu.png", (800, 600))
 
     def handle_events(self, event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                return MainMenuScreen(self.player)
         return self
 
     def update(self):
         pass
 
     def draw(self, screen):
-        screen.fill(self.background_color)
-        ui.draw_save_game_box(screen, self.player)
+        screen.blit(self.background_image, (0, 0))
+
+        ui.draw_save_load_game_box(screen, self.player)
 
         pygame.display.flip()

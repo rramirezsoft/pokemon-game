@@ -13,9 +13,9 @@ class Combat:
         """Lógica para intentar escapar del combate."""
         player_speed = self.current_pokemon.current_stats["speed"]
         enemy_speed = self.enemy_pokemon.current_stats["speed"]
-
+        self.current_pokemon.experience += 30
         escape_chance = ((player_speed * 128) / enemy_speed) + 30
-        random_number = random.randint(0, 255)
+        random_number = random.randint(0, 3)
 
         print(f"velocidad de mi pokemon {player_speed}\nVelocidad del pokemon enemigo {enemy_speed}"
               f"\nProbabilidad de escapar {escape_chance}\nNumero aleatorio {random_number}")

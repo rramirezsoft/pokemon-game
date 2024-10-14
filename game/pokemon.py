@@ -8,24 +8,25 @@ import pygame
 class Pokemon:
     generated_ids = set()  # Set para almacenar todos los IDs generados
 
-    def __init__(self, name, types, base_stats, evs, moves, height, weight, pokedex_id, level=None, status=None):
+    def __init__(self, name, types, base_stats, evs, moves, height, weight, pokedex_id, random_id=None,
+                 experience=0, level=None, ivs=None, status=None):
         self.name = name
         self.types = types
         self.base_stats = base_stats
         self.evs = evs
-        self.ivs = self.generate_ivs()
-        self.level = random.randint(5, 100) if level is None else level  # Nivel aleatorio si no se especifica
+        self.ivs = ivs if ivs is not None else self.generate_ivs()
+        self.level = random.randint(5, 100) if level is None else level
         self.moves = self.select_moves(moves)
         self.height = height / 10  # Conversión a metros
         self.weight = weight / 10  # Conversión a kilogramos
-        self.experience = 0
+        self.experience = experience
         self.experience_to_next_level = self.calculate_exp_to_next_level()
         self.status = status
         self.image = self.load_image()  # Cargar la imagen al inicializar
         self.max_stats = self.calculate_stats()  # Guardar las estadísticas máximas
         self.current_stats = self.max_stats.copy()  # Inicializar los HP actuales al máximo
         self.current_hp = self.current_stats.get('hp', 0)  # Inicializar HP actuales
-        self.id = self.generate_id()  # Generamos un id unico de 6 cifras a cada pokemon
+        self.random_id = random_id if random_id is not None else self.generate_random_id()  # ID de 6 cifras random
         self.pokedex_id = pokedex_id  # Almacenar el ID de la Pokédex
 
     @staticmethod
@@ -41,7 +42,7 @@ class Pokemon:
         }
 
     @staticmethod
-    def generate_id():
+    def generate_random_id():
         """
         Genera un ID de 6 cifras unico para cada pokemon.
         Verifica que el ID no se repita
@@ -116,7 +117,8 @@ class Pokemon:
         height = pokemon_data['physical_attributes']['height']
         weight = pokemon_data['physical_attributes']['weight']
         pokedex_id = pokemon_data['id']
-        return cls(name, types, base_stats, evs, moves, height, weight, pokedex_id, level)
+
+        return cls(name, types, base_stats, evs, moves, height, weight, pokedex_id, level=level)
 
     def load_image(self, desired_size=None):
         """Carga la imagen del Pokémon a su tamaño original y la redimensiona si es necesario."""
