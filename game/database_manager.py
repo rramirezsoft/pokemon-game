@@ -1,10 +1,12 @@
 from pymongo import MongoClient
 from game.pokemon import Pokemon
+from dotenv import load_dotenv
+import os
 
-MONGO_URI = (
-    "mongodb+srv://rramirezsoft:XUiJVIQgtiCzay57@pokedatabase.v35fd.mongodb.net/?retryWrites=true&w=majority"
-    "&appName=PokeDataBase"
-)
+load_dotenv()  # Cargamos las variables de entorno del archivo .env
+
+# Obtenemos la URI de MongoDB desde las variables de entorno
+MONGO_URI = os.getenv("MONGO_URI")
 
 
 def serialize_pokemon(pokemon):

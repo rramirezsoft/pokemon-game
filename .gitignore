@@ -45,3 +45,6 @@ venv/*
 *.swo
 *.iml
 .venv/
+
+# Variables de entorno
+.env/
