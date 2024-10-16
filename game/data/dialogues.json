@@ -53,5 +53,19 @@
             "Game saved successfully!"
         ]
 
-  }
+  },
+    "delete_game": {
+        "delete_prompt": [
+            "Delete all saved data?"
+        ],
+        "confirmation": [
+            "Once data has been deleted, There is no way to recoverit. Delete the saved data anyway?"
+        ],
+        "deleting_data": [
+            "Deleting all saved data. Don't turn off the power..."
+        ],
+        "deleted_data": [
+            "All saved data has been deleted."
+        ]
+    }
 }

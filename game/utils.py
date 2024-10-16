@@ -102,6 +102,20 @@ def draw_confirmation_box(screen, selected_option, position=(0, 0), box_width=14
         screen.blit(arrow_text, (no_text_pos[0] - 20, no_text_pos[1]))
 
 
+def handle_load_save_events(cls, event):
+    if event.type == pygame.KEYDOWN:
+        if cls.timer is not None or not cls.text_display_manager.is_dialogue_complete():
+            return cls
+        if event.key == pygame.K_RETURN:
+            return cls.handle_return_key()
+        elif event.key in (pygame.K_UP, pygame.K_DOWN):
+            if cls.show_confirmation:
+                cls.selected_confirmation_option = handle_confirmation_navigation(
+                    cls.selected_confirmation_option, event.key
+                )
+    return cls
+
+
 def load_pokemon_data(file_path='data/poke_data.json'):
     """Cargar la lista de datos de Pokémon desde un archivo JSON."""
     with open(file_path, 'r') as file:

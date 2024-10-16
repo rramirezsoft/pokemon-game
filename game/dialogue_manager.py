@@ -7,9 +7,8 @@ def replace_placeholders(text, placeholders):
     """
     Reemplaza los placeholders en un texto con los valores proporcionados.
 
-    :param text: El texto con los placeholders, por ejemplo "Hola {nombre}"
-    :param placeholders: Un diccionario con los valores a sustituir,
-                         por ejemplo {"nombre": "Ash"}
+    :param text: El texto con los placeholders.
+    :param placeholders: Un diccionario con los valores a sustituir.
     :return: El texto con los placeholders reemplazados.
     """
     for key, value in placeholders.items():

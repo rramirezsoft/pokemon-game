@@ -1344,102 +1344,102 @@ GUARDAR/CARGAR PARTIDA
 """
 
 
-def draw_save_load_game_box(screen, player, is_load=False, box_position=(30, 30), box_width=400, box_height=300):
+def draw_save_load_game_box(screen, title=None, player=None, text=None,
+                            box_position=(30, 30), box_width=400, box_height=300,
+                            text_color=(0, 0, 0), title_color=(255, 0, 0),
+                            outer_border_color=(218, 165, 32), inner_border_color=(75, 77, 76),
+                            fill_color=(255, 255, 255),
+                            outer_border_thickness=4, inner_border_thickness=4, outer_border_radius=8,
+                            inner_border_radius=5, font_size=35):
     """
-    Dibuja una caja de información de guardado o carga de juego
-
-    :param screen: La pantalla en la que se va a dibujar.
-    :param player: Objeto del jugador.
-    :param is_load: Indica si es para cargar (True) o guardar (False) partida.
-    :param box_position: La posición superior izquierda de la caja.
-    :param box_width: El ancho de la caja.
-    :param box_height: La altura de la caja.
+    Dibuja una caja con información para guardar/cargar partida
     """
-    # Colores
-    outer_border_color = (218, 165, 32)
-    inner_border_color = (75, 77, 76)
-    text_color = (0, 0, 0)
-    red_color = (255, 0, 0)
-    fill_color = (255, 255, 255)
-
-    # Bordes y radios
-    outer_border_thickness = 4
-    inner_border_thickness = 4
-    outer_border_radius = 8
-    inner_border_radius = 5
 
     # Fuente
-    font = pygame.font.Font(utils.load_font(), 35)
+    font = pygame.font.Font(utils.load_font(), font_size)
 
-    # Crear la superficie para el cuadro de guardado/carga
-    save_box_surface = pygame.Surface((box_width, box_height), pygame.SRCALPHA)
+    # Crear la superficie para el cuadro flexible
+    box_surface = pygame.Surface((box_width, box_height), pygame.SRCALPHA)
 
     # Dibujar el borde dorado exterior
-    pygame.draw.rect(save_box_surface, outer_border_color, (0, 0, box_width, box_height),
+    pygame.draw.rect(box_surface, outer_border_color, (0, 0, box_width, box_height),
                      border_radius=outer_border_radius, width=outer_border_thickness)
 
-    # Dibujar el borde grisáceo interior
-    pygame.draw.rect(save_box_surface, inner_border_color,
+    # Dibujar el borde interior
+    pygame.draw.rect(box_surface, inner_border_color,
                      (outer_border_thickness, outer_border_thickness,
                       box_width - 2 * outer_border_thickness, box_height - 2 * outer_border_thickness),
                      border_radius=inner_border_radius, width=inner_border_thickness)
 
-    # Dibujar el relleno blanco dentro del cuadro de guardado/carga
-    pygame.draw.rect(save_box_surface, fill_color,
+    # Dibujar el relleno dentro de la caja
+    pygame.draw.rect(box_surface, fill_color,
                      (outer_border_thickness + inner_border_thickness, outer_border_thickness + inner_border_thickness,
                       box_width - 2 * (outer_border_thickness + inner_border_thickness),
                       box_height - 2 * (outer_border_thickness + inner_border_thickness)),
                      border_radius=5)
 
-    # Blit del cuadro de guardado/carga en la superficie principal
-    screen.blit(save_box_surface, box_position)
+    # Blit de la caja en la pantalla principal
+    screen.blit(box_surface, box_position)
 
-    # Posiciones de los títulos (izquierda) y valores (derecha)
-    left_x = box_position[0] + 30
-    right_x = box_position[0] + box_width - 30
-    start_y = box_position[1] + 70
-    line_spacing = 45
+    # Si hay un título, lo dibujamos centrado en la parte superior, con el color y tamaño adecuado
+    if title:
+        title_surface = font.render(title, True, title_color)
+        title_x = box_position[0] + (box_width - title_surface.get_width()) // 2
+        title_y = box_position[1] + 20
+        screen.blit(title_surface, (title_x, title_y))
 
-    # Cambia el título dependiendo de si es guardar o cargar
-    title_text = "LOAD GAME" if is_load else "SAVE GAME"
-    title_surface = font.render(title_text, True, red_color)
-    screen.blit(title_surface, (box_position[0] + (box_width - title_surface.get_width()) // 2, box_position[1] + 20))
+    # Si hay texto (sin jugador), dibujamos el texto centrado en la caja
+    if text:
+        text_surface = font.render(text, True, text_color)
+        text_x = box_position[0] + (box_width - text_surface.get_width()) // 2
+        text_y = box_position[1] + (box_height - text_surface.get_height()) // 2
+        screen.blit(text_surface, (text_x, text_y))
 
-    # 1. Dibujar la información del jugador en la parte izquierda (PLAYER)
-    player_text = font.render("PLAYER:", True, text_color)
-    screen.blit(player_text, (left_x, start_y))
+    # Si se proporciona información del jugador, la dibujamos
+    if player:
+        start_y = box_position[1] + 70
+        line_spacing = 45
+        left_x = box_position[0] + 30
+        right_x = box_position[0] + box_width - 30
 
-    player_name_text = font.render(player.name, True, text_color)
-    screen.blit(player_name_text, (right_x - player_name_text.get_width(), start_y))
+        # 1. Información del jugador
+        player_text = font.render("PLAYER:", True, text_color)
+        screen.blit(player_text, (left_x, start_y))
 
-    # 2. Dibujar la Pokédex (POKÉDEX)
-    pokedex_text = font.render("POKÉDEX:", True, text_color)
-    screen.blit(pokedex_text, (left_x, start_y + line_spacing))
+        player_name_text = font.render(player.name, True, text_color)
+        screen.blit(player_name_text, (right_x - player_name_text.get_width(), start_y))
 
-    pokedex_seen = player.get_pokedex_counts()[0]
-    pokedex_count_text = font.render(f"{pokedex_seen}", True, text_color)
-    screen.blit(pokedex_count_text, (right_x - pokedex_count_text.get_width(), start_y + line_spacing))
+        # 2. Pokedex Info
+        pokedex_text = font.render("POKÉDEX:", True, text_color)
+        screen.blit(pokedex_text, (left_x, start_y + line_spacing))
 
-    # 3. Dibujar Pokémon Team (POKÉMON TEAM)
-    pokemon_team_text = font.render("POKÉMON TEAM:", True, text_color)
-    screen.blit(pokemon_team_text, (left_x, start_y + 2 * line_spacing))
+        pokedex_seen = player.get_pokedex_counts()[0]
+        pokedex_count_text = font.render(f"{pokedex_seen}", True, text_color)
+        screen.blit(pokedex_count_text, (right_x - pokedex_count_text.get_width(), start_y + line_spacing))
 
-    # Dibujar las imágenes de los Pokémon en el equipo debajo del texto "POKÉMON TEAM"
-    pokemon_image_y = start_y + 3 * line_spacing
-    pokemon_image_x = left_x
-    pokemon_image_size = (40, 40)
+        # Inicializamos pokemon_image_y en caso de que no haya equipo Pokémon
+        pokemon_image_y = start_y + 2 * line_spacing
 
-    for pokemon in player.pokemons:
-        if pokemon.image:
-            resized_image = pygame.transform.scale(pokemon.image, pokemon_image_size)
-            screen.blit(resized_image, (pokemon_image_x, pokemon_image_y))
-            pokemon_image_x += 60
+        # 3. Pokémon Team
+        pokemon_team_text = font.render("POKÉMON TEAM:", True, text_color)
+        screen.blit(pokemon_team_text, (left_x, start_y + 2 * line_spacing))
 
-    # 4. Dibujar el tiempo de juego (TIME)
-    time_text = font.render("TIME:", True, text_color)
-    playtime_text = font.render(player.get_playtime_formatted(), True, text_color)
-    screen.blit(time_text, (left_x, pokemon_image_y + 40))
-    screen.blit(playtime_text, (right_x - playtime_text.get_width(), pokemon_image_y + 40))
+        # Dibujar los Pokémon del equipo
+        pokemon_image_y = start_y + 3 * line_spacing
+        pokemon_image_x = left_x
+        pokemon_image_size = (40, 40)
+
+        for pokemon in player.pokemons:
+            if pokemon.image:
+                resized_image = pygame.transform.scale(pokemon.image, pokemon_image_size)
+                screen.blit(resized_image, (pokemon_image_x, pokemon_image_y))
+                pokemon_image_x += 60
+
+        # 4. Tiempo de juego
+        time_text = font.render("TIME:", True, text_color)
+        playtime_text = font.render(player.get_playtime_formatted(), True, text_color)
+        screen.blit(time_text, (left_x, pokemon_image_y + 40))
+        screen.blit(playtime_text, (right_x - playtime_text.get_width(), pokemon_image_y + 40))
 
 
 def draw_pokedex_pokemon_slots(screen, player, pokemon_list, region_name,
@@ -1549,7 +1549,7 @@ def draw_scroll_bar(screen, pokemon_list, current_scroll_position, num_pokemon_v
 
     # Calcular la posición de la barra de desplazamiento
     scroll_position = (current_scroll_position / (total_pokemon - num_pokemon_visible)) * (
-                scroll_bar_height - visible_scroll_height) if total_pokemon > num_pokemon_visible else 0
+            scroll_bar_height - visible_scroll_height) if total_pokemon > num_pokemon_visible else 0
 
     # Dibujar la barra de fondo
     pygame.draw.rect(screen, (190, 2, 3), (scroll_bar_x, scroll_bar_y, scroll_bar_width, scroll_bar_height))

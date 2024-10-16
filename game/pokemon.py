@@ -17,8 +17,8 @@ class Pokemon:
         self.ivs = ivs if ivs is not None else self.generate_ivs()
         self.level = random.randint(5, 100) if level is None else level
         self.moves = self.select_moves(moves)
-        self.height = height / 10  # Conversión a metros
-        self.weight = weight / 10  # Conversión a kilogramos
+        self.height = height
+        self.weight = weight
         self.experience = experience
         self.experience_to_next_level = self.calculate_exp_to_next_level()
         self.status = status
@@ -114,8 +114,8 @@ class Pokemon:
         base_stats = {stat_name: stat_info['base_stat'] for stat_name, stat_info in pokemon_data['stats'].items()}
         evs = {stat_name: stat_info['evs'] for stat_name, stat_info in pokemon_data['stats'].items()}
         moves = pokemon_data['moves']
-        height = pokemon_data['physical_attributes']['height']
-        weight = pokemon_data['physical_attributes']['weight']
+        height = pokemon_data['physical_attributes']['height'] / 10  # Convertir a metros
+        weight = pokemon_data['physical_attributes']['weight'] / 10  # Convertir a kilogramos
         pokedex_id = pokemon_data['id']
 
         return cls(name, types, base_stats, evs, moves, height, weight, pokedex_id, level=level)

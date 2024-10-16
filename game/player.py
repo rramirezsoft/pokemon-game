@@ -1,5 +1,4 @@
 import random
-
 from game.pokemon import create_pokemon
 from game.database_manager import DataBaseManager, MONGO_URI
 
