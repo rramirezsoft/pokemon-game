@@ -1,3 +1,5 @@
+import sys
+
 import pygame
 
 from game.player import Player
@@ -44,6 +46,7 @@ def main():
         pygame.time.Clock().tick(60)
 
     pygame.quit()
+    sys.exit()
 
 
 if __name__ == "__main__":

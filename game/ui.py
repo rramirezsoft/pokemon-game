@@ -1417,9 +1417,6 @@ def draw_save_load_game_box(screen, title=None, player=None, text=None,
         pokedex_count_text = font.render(f"{pokedex_seen}", True, text_color)
         screen.blit(pokedex_count_text, (right_x - pokedex_count_text.get_width(), start_y + line_spacing))
 
-        # Inicializamos pokemon_image_y en caso de que no haya equipo Pokémon
-        pokemon_image_y = start_y + 2 * line_spacing
-
         # 3. Pokémon Team
         pokemon_team_text = font.render("POKÉMON TEAM:", True, text_color)
         screen.blit(pokemon_team_text, (left_x, start_y + 2 * line_spacing))

@@ -1,7 +1,6 @@
 import pygame
 import os
-import game.utils as utils
-import game.ui as ui
+from game import utils, ui
 from game.dialogue_manager import DialogueManager, TextDisplayManager
 from game.player import Player
 from game.screen.choose_name_screen import ChooseNameScreen
