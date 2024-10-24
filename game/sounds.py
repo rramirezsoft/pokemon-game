@@ -1,5 +1,4 @@
 import random
-
 import pygame
 
 
@@ -14,17 +13,18 @@ class SoundManager:
 
         # Diccionarios para almacenar música y efectos de sonido
         self.music_tracks = {
-            "opening": "../assets/sound/opening.mp3",
-            "oak": "../assets/sound/oak.mp3",
-            "battle": "../assets/sound/battle.mp3",
-            "jubilife_city": "../assets/sound/jubilife_city.mp3",
-            "lake": "../assets/sound/lake.mp3",
-            "sandgem_town": "../assets/sound/sandgem_town.mp3",
-            "twinleaf_town": "../assets/sound/twinleaf_town.mp3",
-            "vitory": "../assets/sound/vitory.mp3"
+            "opening": "../assets/sound/music/opening.mp3",
+            "oak": "../assets/sound/music/oak.mp3",
+            "battle": "../assets/sound/music/battle.mp3",
+            "jubilife_city": "../assets/sound/music/jubilife_city.mp3",
+            "lake": "../assets/sound/music/lake.mp3",
+            "sandgem_town": "../assets/sound/music/sandgem_town.mp3",
+            "twinleaf_town": "../assets/sound/music/twinleaf_town.mp3",
+            "vitory": "../assets/sound/music/vitory.mp3"
         }
         self.sound_effects = {
-
+            "level_up": pygame.mixer.Sound("../assets/sound/sound_effect/level_up.mp3"),
+            "click_button": pygame.mixer.Sound("../assets/sound/sound_effect/click_button.mp3")
         }
 
         # Inicialización de lista de música para el menú

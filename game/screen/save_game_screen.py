@@ -1,14 +1,12 @@
 import pygame
 from game import utils, ui
 from game.dialogue_manager import DialogueManager, TextDisplayManager
-from game.database_manager import DataBaseManager, MONGO_URI
+from game.screen.base_screen import BaseScreen
 
 
-class SaveGameScreen:
+class SaveGameScreen(BaseScreen):
     def __init__(self, player):
-        self.player = player
-
-        self.db_manager = DataBaseManager(MONGO_URI)  # Conexión con la base de datos
+        super().__init__(player)
 
         # Cargar imagen de fondo
         self.background = utils.load_image("../assets/img/main_menu/fondo.png")

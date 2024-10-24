@@ -4,12 +4,13 @@ from game import utils
 import game.ui as ui
 from game.combat import Combat
 from game.dialogue_manager import TextDisplayManager, DialogueManager
+from game.screen.base_screen import BaseScreen
 
 
-class CombatScreen:
+class CombatScreen(BaseScreen):
     def __init__(self, player, enemy_pokemon):
         """Inicializa la pantalla de combate."""
-        self.player = player
+        super().__init__(player)
         self.enemy_pokemon = enemy_pokemon
         self.font = pygame.font.Font(utils.load_font(), 40)
         self.background_color = (232, 210, 224)
@@ -37,7 +38,7 @@ class CombatScreen:
         self.screen_width, self.screen_height = pygame.display.get_surface().get_size()
         self.background_image = utils.resize_image_to_width(self.background_image, self.screen_width)
 
-        self.pokeball_image = utils.load_image("../assets/img/icons/pokeball.png", (20, 20))
+        self.pokeball_image = utils.load_image("../assets/img/main_menu/icons/pokeball.png", (20, 20))
 
         # Configurar movimientos de los Pokémon usando MovementManager
         self.player_pokemon_movement = ui.PokemonCombatMovement(

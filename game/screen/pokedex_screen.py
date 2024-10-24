@@ -3,8 +3,10 @@ import game.ui as ui
 import game.utils as utils
 import time
 
+from game.screen.base_screen import BaseScreen
 
-class PokedexScreen:
+
+class PokedexScreen(BaseScreen):
 
     REGIONS = ["Kanto", "Johto", "Hoenn", "Sinnoh", "Teselia", "Nacional"]
 
@@ -27,7 +29,7 @@ class PokedexScreen:
     }
 
     def __init__(self, player):
-        self.player = player
+        super().__init__(player)
         self.current_region_index = 0
         self.font = pygame.font.Font(utils.load_font(), 30)
 
@@ -40,6 +42,7 @@ class PokedexScreen:
         self.filtered_pokemon_data = self.filter_pokemon_by_region()
         self.current_scroll_position = 0  # Posición de desplazamiento actual
         self.selected_index = 0  # Índice del Pokémon seleccionado dentro de la región
+        self.selected_pokemon = None
 
         # Variables para desplazamiento continuo
         self.is_scrolling = False
@@ -47,8 +50,7 @@ class PokedexScreen:
         self.scroll_timer = 0
         self.scroll_delay = 0.12
 
-        self.footer = ui.Footer(text="Back")
-        self.footer.footer_rect.topleft = (0, 575)
+        self.footer = ui.Footer(buttons=[{"text": "Data", "icon_path": "../assets/img/keyboard/x_blanco.png"}])
 
     def filter_pokemon_by_region(self):
         """Filtrar Pokémon según la región actual basada en sus IDs."""
@@ -80,6 +82,11 @@ class PokedexScreen:
                 self.is_scrolling = True
                 self.scroll_direction = -1
 
+            # Ver los datos del Pokémon seleccionado si lo presionamos y está disponible
+            elif event.key == pygame.K_x:
+                if self.selected_pokemon['name'].capitalize() in self.player.pokedex_seen:
+                    return PokedexDataScreen(self.player, self.selected_pokemon)
+
         elif event.type == pygame.KEYUP:
             if event.key == pygame.K_DOWN or event.key == pygame.K_UP:
                 self.is_scrolling = False  # Detener desplazamiento al soltar la tecla
@@ -92,7 +99,11 @@ class PokedexScreen:
             elif self.arrow_right_rect and self.arrow_right_rect.collidepoint(mouse_pos):
                 self.change_region(-1)
 
-            if self.footer.handle_events(event):
+            footer_button = self.footer.handle_events(event)
+            if footer_button == "Data":
+                if self.selected_pokemon['name'].capitalize() in self.player.pokedex_seen:
+                    return PokedexDataScreen(self.player, self.selected_pokemon)
+            elif footer_button == "Back":
                 from game.screen.main_menu_screen import MainMenuScreen
                 return MainMenuScreen(self.player)
 
@@ -108,6 +119,7 @@ class PokedexScreen:
     def update(self):
         """Actualiza la pantalla para el desplazamiento continuo."""
         current_time = time.time()
+        self.selected_pokemon = self.filtered_pokemon_data[self.selected_index]
 
         # Controlar el delay entre scrolls
         if self.is_scrolling and current_time - self.scroll_timer > self.scroll_delay:
@@ -194,4 +206,30 @@ class PokedexScreen:
         # Dibujar el footer
         self.footer.draw(screen)
 
+        pygame.display.flip()
+
+
+class PokedexDataScreen(BaseScreen):
+    def __init__(self, player, pokemon):
+        super().__init__(player)
+
+        self.pokemon = pokemon
+        self.footer = ui.Footer()
+
+    def handle_events(self, event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_BACKSPACE or event.key == pygame.K_ESCAPE:
+                return PokedexScreen(self.player)
+
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if self.footer.handle_events(event):
+                return PokedexScreen(self.player)
+        return self
+
+    def update(self):
+        pass
+
+    def draw(self, screen):
+        screen.fill((255, 255, 255))
+        self.footer.draw(screen)
         pygame.display.flip()

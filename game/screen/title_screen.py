@@ -1,15 +1,14 @@
 import pygame
+from game.screen.base_screen import BaseScreen
 from game.screen.load_game_screen import LoadGameScreen
 from game.screen.oak_intro_screen import OakIntroScreen
 from game.utils import load_image, load_font, render_text
-from game.sounds import SoundManager
-from game.database_manager import DataBaseManager, MONGO_URI
 
 
-class TitleScreen:
+class TitleScreen(BaseScreen):
 
     def __init__(self):
-        # Gráficos
+        super().__init__(None)
         self.background_image = load_image("../assets/img/title/fondo.png", (800, 600))
         self.logo_image = load_image("../assets/img/title/logo_pokemon.png", (600, 250))
         self.pikachu_image = load_image("../assets/pokemon_images/pikachu.png", (350, 350))
@@ -21,12 +20,10 @@ class TitleScreen:
         self.blink_interval = 500
 
         # Música
-        self.sound_manager = SoundManager()
         self.sound_manager.play_music("opening")
 
-        # Inicializamos la base de datos
-        self.db_manager = DataBaseManager(MONGO_URI)
-        self.player = None  # Inicializamos un jugador a none
+        # Inicializamos un jugador a none
+        self.player = None
 
     def check_if_player_id_exists(self):
         """

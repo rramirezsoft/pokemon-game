@@ -1,16 +1,16 @@
 import pygame
-from game import utils
+from game import ui, utils
+from game.screen.base_screen import BaseScreen
 from game.screen.save_game_screen import SaveGameScreen
-import game.ui as ui
 from game.screen.pokemon_menu_screen import PokemonMenuScreen
 from game.screen.pokedex_screen import PokedexScreen
-from game.sounds import SoundManager
+from game.screen.trainer_card_screen import TrainerCardScreen
 import game.pokemon as pokemon
 
 
-class MainMenuScreen:
+class MainMenuScreen(BaseScreen):
     def __init__(self, player):
-        self.player = player
+        super().__init__(player)
         self.font = pygame.font.Font(utils.load_font(), 35)
 
         # Cargar imagen de fondo
@@ -20,14 +20,14 @@ class MainMenuScreen:
 
         # Cargar imágenes para los botones
         self.button_images = {
-            "fight": utils.load_image("../assets/img/icons/luchar.png"),
-            "pokemon": utils.load_image("../assets/img/icons/pokeball.png"),
-            "bag": utils.load_image("../assets/img/icons/bolsa.png"),
-            "shop": utils.load_image("../assets/img/icons/tienda.png"),
-            "pokedex": utils.load_image("../assets/img/icons/pokedex.png"),
-            "player": utils.load_image("../assets/img/icons/tarjeta.png"),
-            "options": utils.load_image("../assets/img/icons/ajustes.png"),
-            "save": utils.load_image("../assets/img/icons/guardar.png"),
+            "fight": utils.load_image("../assets/img/main_menu/icons/luchar.png"),
+            "pokemon": utils.load_image("../assets/img/main_menu/icons/pokeball.png"),
+            "bag": utils.load_image("../assets/img/main_menu/icons/bolsa.png"),
+            "shop": utils.load_image("../assets/img/main_menu/icons/tienda.png"),
+            "pokedex": utils.load_image("../assets/img/main_menu/icons/pokedex.png"),
+            "player": utils.load_image("../assets/img/main_menu/icons/tarjeta.png"),
+            "options": utils.load_image("../assets/img/main_menu/icons/ajustes.png"),
+            "save": utils.load_image("../assets/img/main_menu/icons/guardar.png"),
         }
 
         # Crear botones con posiciones ajustadas y dimensiones más pequeñas
@@ -43,7 +43,6 @@ class MainMenuScreen:
         }
 
         # Música
-        self.sound_manager = SoundManager()
         self.sound_manager.play_random_menu_music()
 
     def handle_events(self, event):
@@ -73,7 +72,7 @@ class MainMenuScreen:
         elif button_name == "pokedex":
             return PokedexScreen(self.player)
         elif button_name == "player":
-            print(f"Perfil de jugador: {self.player.name}")
+            return TrainerCardScreen(self.player)
         elif button_name == "options":
             print("Abrir opciones")
         elif button_name == "save":

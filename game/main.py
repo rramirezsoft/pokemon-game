@@ -39,11 +39,12 @@ def main():
             elif new_screen is not current_screen:
                 current_screen = new_screen
 
-        current_screen.update()
-        screen.fill((0, 0, 0))  # Limpiar pantalla
-        current_screen.draw(screen)
-        pygame.display.flip()
-        pygame.time.Clock().tick(60)
+        if running:
+            current_screen.update()
+            screen.fill((0, 0, 0))  # Limpiar pantalla
+            current_screen.draw(screen)
+            pygame.display.flip()
+            pygame.time.Clock().tick(60)
 
     pygame.quit()
     sys.exit()

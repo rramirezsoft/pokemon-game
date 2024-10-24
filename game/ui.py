@@ -365,70 +365,100 @@ class PokemonSlot:
 
 
 class Footer:
-    def __init__(self, text, screen_width=800, icon_path="../assets/img/icons/atras.png",
-                 font_path="../assets/fonts/pokemon.ttf", font_size=21):
+    def __init__(self, text="Back", buttons=None, screen_width=800, icon_path="../assets/img/keyboard/esc_blanco.png",
+                 font_path="../assets/fonts/pokemon.ttf", font_size=21, footer_color=(0, 0, 0)):
         """
-        Inicializa el footer con el icono y el texto.
-
-        :param text: Texto a mostrar junto al icono.
-        :param screen_width: Ancho de la pantalla para centrar el icono y el texto.
-        :param icon_path: Ruta al archivo del icono.
-        :param font_path: Ruta al archivo de la fuente.
-        :param font_size: Tamaño de la fuente.
+        Inicializa el footer con el icono, el texto y botones adicionales.
         """
-        self.icon = pygame.image.load(icon_path)
-        self.icon = pygame.transform.scale(self.icon, (20, 20))  # Ajustar el tamaño del icono
-        self.text = text
         self.font = pygame.font.Font(font_path, font_size)
         self.footer_height = 25
         self.screen_width = screen_width
-        self.footer_rect = pygame.Rect(0, 0, screen_width, self.footer_height)
-        self.text_rect = pygame.Rect(0, 0, 0, 0)
-        self.update_text_position()
+        self.footer_color = footer_color
 
-    def update_text_position(self):
+        # Botón principal (por defecto "Back")
+        self.main_button = {
+            "text": text,
+            "icon": pygame.transform.scale(pygame.image.load(icon_path), (20, 20))
+        }
+
+        # Botones adicionales, si los hay
+        self.buttons = []
+        if buttons:
+            for button in buttons:
+                icon = pygame.transform.scale(pygame.image.load(button['icon_path']), (20, 20))
+                self.buttons.append({"text": button['text'], "icon": icon})
+
+        # Footer rectangle
+        self.footer_rect = pygame.Rect(0, 0, screen_width, self.footer_height)
+        self.footer_rect.bottomleft = (0, pygame.display.get_surface().get_height())
+
+        self.text_rects = []
+        self.icon_positions = []
+
+        self.update_button_positions()
+
+    def update_button_positions(self):
         """
-        Actualiza la posición del texto basado en la posición del icono.
+        Calcula las posiciones de los iconos y textos, distribuyendo los botones desde la derecha.
         """
+        padding = 60  # Espacio entre botones
+
+        # Inicializar posiciones de botones desde la derecha
         icon_x = self.screen_width - 100
-        icon_y = (self.footer_height - self.icon.get_height()) // 2
-        self.text_rect = self.font.render(self.text, True, (255, 255, 255)).get_rect(
-            midleft=(icon_x + 30, self.footer_rect.centery))
+        icon_y = self.footer_rect.y + (self.footer_height - self.main_button['icon'].get_height()) // 2
+
+        # Posición del botón principal (Back)
+        self.icon_positions.append((icon_x, icon_y))
+        text_surface = self.font.render(self.main_button['text'], True, (255, 255, 255))
+        text_rect = text_surface.get_rect(midleft=(icon_x + 30, self.footer_rect.y + self.footer_height // 2))
+        self.text_rects.append((text_surface, text_rect))
+
+        # Posiciones de los botones adicionales, alineados a la izquierda del botón principal
+        for i, button in enumerate(self.buttons):
+            icon_x -= (button['icon'].get_width() + text_surface.get_width() + padding)
+
+            icon_y = self.footer_rect.y + (self.footer_height - button['icon'].get_height()) // 2
+            self.icon_positions.append((icon_x, icon_y))
+            text_surface = self.font.render(button['text'], True, (255, 255, 255))
+            text_rect = text_surface.get_rect(midleft=(icon_x + 30, self.footer_rect.y + self.footer_height // 2))
+            self.text_rects.append((text_surface, text_rect))
 
     def draw(self, screen):
         """
         Dibuja el footer en la pantalla.
-
-        :param screen: Superficie de pygame en la que se dibuja.
         """
-        # Ajusta la posición del footer en la parte inferior de la pantalla
-        self.footer_rect.bottomleft = (0, screen.get_height())
+        # Dibuja el fondo del footer en la parte inferior
+        pygame.draw.rect(screen, self.footer_color, self.footer_rect)
 
-        # Dibuja el fondo del footer
-        pygame.draw.rect(screen, (20, 20, 20), self.footer_rect)  # Casi negro
+        # Dibujar los botones: primero los iconos y luego los textos
+        for i, (icon_pos, text_data) in enumerate(zip(self.icon_positions, self.text_rects)):
+            if i == 0:
+                screen.blit(self.main_button['icon'], icon_pos)
+            else:
+                screen.blit(self.buttons[i - 1]['icon'], icon_pos)
 
-        # Dibuja el icono
-        icon_x = self.footer_rect.width - 100
-        icon_y = self.footer_rect.y + (self.footer_height - self.icon.get_height()) // 2
-        screen.blit(self.icon, (icon_x, icon_y))
+            # Dibuja el texto del botón
+            text_surface, text_rect = text_data
+            screen.blit(text_surface, text_rect)
 
-        # Dibuja el texto
-        self.update_text_position()
-        text_surface = self.font.render(self.text, True, (255, 255, 255))  # Texto en blanco
-        screen.blit(text_surface, self.text_rect)
+        pygame.display.flip()
 
     def handle_events(self, event):
         """
-        Maneja eventos, como clics del ratón sobre el footer.
-
-        :param event: Evento de pygame.
-        :return: `True` si se hace clic en el área del texto, `False` en caso contrario.
+        Maneja eventos.
         """
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = pygame.mouse.get_pos()
-            if self.text_rect.collidepoint(mouse_pos):
-                return True
-        return False
+
+            # Verificar si se hizo clic en alguno de los botones, incluido el botón principal
+            for i, (_, text_rect) in enumerate(self.text_rects):
+                if text_rect.collidepoint(mouse_pos):
+                    if i == 0:
+                        return self.main_button["text"]  # Se clicó el botón "Back" principal
+                    else:
+                        return self.buttons[i - 1]["text"]  # Se clicó uno de los botones adicionales
+
+        return None
 
 
 class MiniMenu:
@@ -1020,7 +1050,7 @@ def wrap_text(text, font, max_width):
 
 def start_battle_transition(player, enemy_pokemon):
     """Realiza la animación de transición de combate y luego inicia la batalla."""
-    pokeball_image = utils.load_image("../assets/img/icons/pokeball.png")
+    pokeball_image = utils.load_image("../assets/img/main_menu/icons/pokeball.png")
 
     # Configuración inicial de la animación
     initial_size = 40
@@ -1459,6 +1489,7 @@ def draw_pokedex_pokemon_slots(screen, player, pokemon_list, region_name,
         if current_scroll_position + i == selected_index:
             box_color = (0, 0, 0)
             text_color = (255, 255, 255)
+            pokeball_type = "pokeball_white"
 
             box_surface = pygame.Surface((box_width, box_height), pygame.SRCALPHA)
             pygame.draw.rect(box_surface, box_color, box_surface.get_rect(), border_radius=border_radius)
@@ -1466,6 +1497,15 @@ def draw_pokedex_pokemon_slots(screen, player, pokemon_list, region_name,
         else:
             # Si no está seleccionada, no dibujamos la caja
             text_color = (0, 0, 0)
+            pokeball_type = "pokeball_black"
+
+        # Calcular el id regional
+        offset = region_offsets.get(region_name, 0)
+        region_id = pokemon['id'] - offset
+
+        # Dibujar el id regional de Pokédex
+        pokedex_number = font.render(f"Nº. {region_id}", True, text_color)
+        screen.blit(pokedex_number, (x_position + 80, y_pos + (box_height - pokedex_number.get_height()) // 2))
 
         # Comprobar si el pokemon ha sido avistado
         pokemon_seen = pokemon['name'].capitalize() in player.pokedex_seen
@@ -1479,32 +1519,26 @@ def draw_pokedex_pokemon_slots(screen, player, pokemon_list, region_name,
                 image = pygame.transform.scale(image, (48, 48))
                 screen.blit(image, (x_position + 10, y_pos + (box_height - 48) // 2))
 
-            # Calcular el id regional
-            offset = region_offsets.get(region_name, 0)
-            region_id = pokemon['id'] - offset
-
-            # Dibujar el id regional de Pokédex
-            pokedex_number = font.render(f"Nº. {region_id}", True, text_color)
-            screen.blit(pokedex_number, (x_position + 80, y_pos + (box_height - pokedex_number.get_height()) // 2))
-
             # Dibujar el nombre del Pokémon
             name_text = font.render(pokemon['name'].capitalize(), True, text_color)
             screen.blit(name_text, (x_position + 160, y_pos + (box_height - name_text.get_height()) // 2))
-        else:
-            # Si el Pokémon no ha sido avistado, mostrar "???" en lugar del número y nombre
-            pokedex_number = font.render("Nº. ???", True, text_color)
-            screen.blit(pokedex_number, (x_position + 80, y_pos + (box_height - pokedex_number.get_height()) // 2))
 
-            name_text = font.render("???", True, text_color)
-            screen.blit(name_text, (x_position + 160, y_pos + (box_height - name_text.get_height()) // 2))
-
-        # Verificar si el jugador tiene el Pokémon capturado
-        if pokemon['name'].capitalize() in player.pokedex_captured:
+            # Verificar si el jugador tiene el Pokémon capturado
+            if pokemon['name'].capitalize() in player.pokedex_captured:
+                pokeball_image_path = "../assets/img/main_menu/icons/pokeball.png"
+            else:
+                pokeball_image_path = f"../assets/img/pokemon_menu/{pokeball_type}.png"
             # Dibuja la Poké Ball a la derecha del slot
-            pokeball_image_path = "../assets/img/icons/pokeball.png"
             pokeball_image = pygame.image.load(pokeball_image_path)
             pokeball_image = pygame.transform.scale(pokeball_image, (28, 28))
             screen.blit(pokeball_image, (x_position + box_width - 40, y_pos + (box_height - 32) // 2))
+        else:
+            # Si el Pokémon no ha sido avistado, mostrar "???" en lugar del nombre
+            name_text = font.render("???", True, text_color)
+            screen.blit(name_text, (x_position + 160, y_pos + (box_height - name_text.get_height()) // 2))
+
+            pokeball_null = font.render("--", True, text_color)
+            screen.blit(pokeball_null, (x_position + box_width - 36, y_pos + (box_height - 32) // 2))
 
     # Mostrar en grande el Pokémon seleccionado
     if pokemon_list and 0 <= selected_index < len(pokemon_list):
@@ -1523,7 +1557,7 @@ def draw_pokedex_pokemon_slots(screen, player, pokemon_list, region_name,
                 screen.blit(big_image, (big_image_x, big_image_y))
         else:
             # Si no ha sido avistado, mostrar una imagen de interrogación
-            mystery_image_path = "../assets/img/icons/question_mark.png"
+            mystery_image_path = "../assets/img/main_menu/icons/question_mark.png"
             if os.path.exists(mystery_image_path):
                 mystery_image = pygame.image.load(mystery_image_path)
                 mystery_image = pygame.transform.scale(mystery_image, (350, 350))
