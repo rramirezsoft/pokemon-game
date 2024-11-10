@@ -8,8 +8,8 @@ import pygame
 class Pokemon:
     generated_ids = set()  # Set para almacenar todos los IDs generados
 
-    def __init__(self, name, types, base_stats, evs, moves, height, weight, pokedex_id, random_id=None,
-                 experience=0, level=None, ivs=None, status=None):
+    def __init__(self, name, types, abilities, base_stats, evs, moves, height, weight, pokedex_id, gender_rate,
+                random_id=None, experience=0, level=None, ivs=None, status=None):
         self.name = name
         self.types = types
         self.base_stats = base_stats
@@ -23,9 +23,12 @@ class Pokemon:
         self.experience_to_next_level = self.calculate_exp_to_next_level()
         self.status = status
         self.image = self.load_image()  # Cargar la imagen al inicializar
+        self.sound = self.load_sound()  # Cargar el sonido al inicializar
         self.max_stats = self.calculate_stats()  # Guardar las estadísticas máximas
         self.current_stats = self.max_stats.copy()  # Inicializar los HP actuales al máximo
         self.current_hp = self.current_stats.get('hp', 0)  # Inicializar HP actuales
+        self.ability = self.get_ability(abilities)
+        self.gender = self.get_gender(gender_rate)
         self.random_id = random_id if random_id is not None else self.generate_random_id()  # ID de 6 cifras random
         self.pokedex_id = pokedex_id  # Almacenar el ID de la Pokédex
 
@@ -79,6 +82,40 @@ class Pokemon:
         else:
             return int((((2 * base_stat + iv + (ev / 4)) * self.level) / 100) + 5)
 
+    @staticmethod
+    def get_ability(abilities):
+        # Obtenemos una habilidad aleatoria entre todas las disponibles
+        available_abilities = [ability for ability in abilities]
+        selected_ability = random.choice(available_abilities)
+        return selected_ability
+
+    @staticmethod
+    def get_gender(gender_rate):
+        """Determina el género del Pokémon basado en gender_rate."""
+
+        # Si gender_rate es una cadena, lo devolvemos directamente
+        if isinstance(gender_rate, str):
+            if gender_rate in ["male", "female"]:
+                return gender_rate
+            return "N/A"
+
+        # Si es un ratio, lo pasamos a entero
+        try:
+            gender_rate = int(gender_rate)
+        except ValueError:
+            return "N/A"  # Si no se puede convertir, retornamos "N/A"
+
+        if gender_rate == -1:
+            return "N/A"  # Pokémon sin género
+        elif gender_rate == 0:
+            return "male"  # 100% Macho
+        elif gender_rate == 8:
+            return "female"  # 100% Hembra
+        else:
+            # Probabilidad de ser hembra
+            female_chance = gender_rate / 8.0
+            return "female" if random.random() < female_chance else "male"
+
     def calculate_exp_to_next_level(self):
         """Calcular la experiencia necesaria para el siguiente nivel."""
         return 4 * (self.level ** 3) // 5
@@ -111,14 +148,16 @@ class Pokemon:
         """Crear un Pokémon a partir de los datos en formato JSON."""
         name = pokemon_data['name'].capitalize()
         types = pokemon_data['types']
+        abilities = pokemon_data['abilities']
         base_stats = {stat_name: stat_info['base_stat'] for stat_name, stat_info in pokemon_data['stats'].items()}
         evs = {stat_name: stat_info['evs'] for stat_name, stat_info in pokemon_data['stats'].items()}
         moves = pokemon_data['moves']
         height = pokemon_data['physical_attributes']['height'] / 10  # Convertir a metros
         weight = pokemon_data['physical_attributes']['weight'] / 10  # Convertir a kilogramos
         pokedex_id = pokemon_data['id']
+        gender_rate = pokemon_data['species']['gender_rate']
 
-        return cls(name, types, base_stats, evs, moves, height, weight, pokedex_id, level=level)
+        return cls(name, types, abilities, base_stats, evs, moves, height, weight, pokedex_id, gender_rate, level=level)
 
     def load_image(self, desired_size=None):
         """Carga la imagen del Pokémon a su tamaño original y la redimensiona si es necesario."""
@@ -132,6 +171,13 @@ class Pokemon:
 
             return self.pil_to_pygame(pil_image)
         return None  # Devuelve None si no se encuentra la imagen
+
+    def load_sound(self):
+        """Cargar el sonido del Pokémon."""
+        sound_path = f'../assets/pokemon_sounds/{self.name.lower()}.mp3'
+        if os.path.exists(sound_path):
+            return pygame.mixer.Sound(sound_path)
+        return None
 
     @staticmethod
     def pil_to_pygame(pil_image):

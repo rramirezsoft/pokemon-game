@@ -1,16 +1,17 @@
 import pygame
 from game import ui, utils
+from game.icons import GenderIcons
 from game.screen.base_screen import BaseScreen
 
 
 class PokemonMenuScreen(BaseScreen):
-    def __init__(self, player, combat=None):
+    def __init__(self, player, combat=None, selected_index=0):
         super().__init__(player)
 
         self.combat = combat  # Instancia del combate (si la hay)
         self.pokemon_team = self.player.pokemons
         self.slots = []
-        self.selected_index = 0  # Índice del slot preseleccionado
+        self.selected_index = selected_index  # Índice del slot preseleccionado
         self.slot_selected = None  # Almacena la caja que está seleccionada
         self.show_menu = False  # Controla si se muestra el mini menú
 
@@ -312,8 +313,6 @@ class PokemonMenuScreen(BaseScreen):
             self.mini_menu.position = (
                 slot_rect.right - 10, slot_rect.top - 10)  # Ajusta la posición según sea necesario
             self.mini_menu.rect.topleft = self.mini_menu.position
-
-            print(f"MiniMenu position: {self.mini_menu.position}")  # Verificar posición
             self.mini_menu.show = True
         else:
             print("No se puede seleccionar una caja vacía.")
@@ -390,12 +389,16 @@ class PokemonDataScreen(BaseScreen):
         self.current_tab = self.TAB_INFO  # Pestaña abierta por defecto
         self.selected_move_index = None  # Índice del movimiento seleccionado
         self.move_rects = []  # Rectángulos de los movimientos para detección de clics
+        self.scroll_offset = 0  # Desplazamiento en las cajas de información si es necesario
 
         # Imagen de la Pokébola para el fondo
         self.pokeball_image = utils.load_image("../assets/img/main_menu/icons/pokeball.png", (26, 26))
 
         # Fuente para el texto
         self.font = pygame.font.Font(utils.load_font(), 30)
+
+        # Género del Pokémon
+        self.gender_icon = GenderIcons()
 
         # Flechas
         self.arrow_up_rect = None
@@ -445,7 +448,7 @@ class PokemonDataScreen(BaseScreen):
                 else:
                     if self.combat:
                         return PokemonMenuScreen(self.player, self.combat)
-                    return PokemonMenuScreen(self.player)
+                    return PokemonMenuScreen(self.player, selected_index=self.selected_pokemon_index)
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = pygame.mouse.get_pos()
@@ -480,7 +483,7 @@ class PokemonDataScreen(BaseScreen):
             else:
                 if self.combat:
                     return PokemonMenuScreen(self.player, self.combat)
-                return PokemonMenuScreen(self.player)
+                return PokemonMenuScreen(self.player, selected_index=self.selected_pokemon_index)
 
         return self
 
@@ -524,7 +527,11 @@ class PokemonDataScreen(BaseScreen):
         font_level = pygame.font.Font(utils.load_font(), 28)
         level_text = font_level.render(f"Nv. {self.selected_pokemon.level}", True, (255, 255, 255))
         screen.blit(name_text, (screen_width // 2 + 120, 15))
-        screen.blit(level_text, (screen_width // 2 + 250, 17))
+        screen.blit(level_text, (screen_width // 2 + 255, 17))
+
+        # Dibujar el género del pokémon
+        ui.draw_gender_icon(screen, self.gender_icon, self.selected_pokemon, screen_width - 65, 20)
+
 
         # Dibujar el Pokémon seleccionado en el centro-derecha de la pantalla
         if self.selected_pokemon.image:
@@ -573,7 +580,7 @@ class PokemonDataScreen(BaseScreen):
 
                 # Dibujar la descripción del movimiento justo debajo
                 description = move.get('description', 'No description available.')
-                ui.draw_description(screen, description, 0, 449, 430, 100,
+                ui.draw_box(screen, description, 0, 449, 430, 100,
                                     24)
 
         # Dibujar el footer

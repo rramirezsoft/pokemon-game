@@ -15,9 +15,13 @@ class Combat:
         enemy_speed = self.enemy_pokemon.current_stats["speed"]
         escape_chance = ((player_speed * 128) / enemy_speed) + 30
         random_number = random.randint(0, 3)
+        self.player.bag.add_item("pokeballs", 10)
+
+        random_capture = random.randint(0, 1)
+        if random_capture == 0:
+            self.player.capture_pokemon(self.enemy_pokemon)
 
         print(f"velocidad de mi pokemon {player_speed}\nVelocidad del pokemon enemigo {enemy_speed}"
               f"\nProbabilidad de escapar {escape_chance}\nNumero aleatorio {random_number}")
 
         return escape_chance >= random_number
-

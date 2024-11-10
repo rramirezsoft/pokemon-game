@@ -1,10 +1,10 @@
 import os
-
 import pygame
 import pygame.gfxdraw
 import math
+
 import game.utils as utils
-from game.types import TypeIcons
+from game.icons import TypeIcons, GenderIcons
 
 
 def draw_gradient(screen, start_color, end_color, rect):
@@ -304,6 +304,9 @@ class PokemonSlot:
         self.font = pygame.font.Font('../assets/fonts/pokemon.ttf', 24)
         self.level_font = pygame.font.Font('../assets/fonts/pokemon.ttf', 20)
 
+        # Género del Pokémon
+        self.gender_icon = GenderIcons(icon_size=(20, 20))
+
         # Inicializar la barra de salud si el Pokémon existe
         if pokemon:
             health_bar_rect = pygame.Rect(
@@ -354,6 +357,11 @@ class PokemonSlot:
             # Dibujar el nombre del Pokémon
             name_text = self.font.render(self.pokemon.name, True, text_color)
             screen.blit(name_text, (self.rect.x + self.rect.width * 0.20, self.rect.y + self.rect.height * 0.1))
+
+            # Dibujar el icono del género del Pokémon a la derecha de la barra de vida
+            draw_gender_icon(screen, self.gender_icon, self.pokemon,
+                             self.rect.x + self.rect.width * 0.20 + self.health_bar.rect.width - 15,
+                             self.rect.y + (self.rect.height * 0.125))
 
             # Dibujar el nivel del Pokémon
             level_text = self.level_font.render(f"Nv. {self.pokemon.level}", True, text_color)
@@ -535,7 +543,8 @@ class MiniMenu:
 
 def draw_pokemon_background(screen, triangle_points, stripe_points, img_position, img_size,
                             img_path="../assets/img/pokemon_menu/info.png", angle_rotation=15,
-                            background_color=(233, 239, 255), triangle_color=(227, 49, 63), stripe_color=(196, 40, 53)):
+                            background_color=(233, 239, 255), triangle_color=(227, 49, 63), stripe_color=(196, 40, 53),
+                            extra_stripe_points=None):
     """
     Dibuja un fondo para el menú de equipo Pokémon.
 
@@ -549,18 +558,23 @@ def draw_pokemon_background(screen, triangle_points, stripe_points, img_position
     :param background_color: Color de fondo.
     :param triangle_color: Color del triángulo.
     :param stripe_color: Color de la franja diagonal
+    :param extra_stripe_points:  (Opcional) Lista de puntos (x, y) para una franja adicional.
     """
 
     # Obtener el tamaño de la pantalla
     screen.fill(background_color)
 
-    # Dibujar el triángulo rojo brillante
+    # Dibujar el triángulo
     pygame.draw.polygon(screen, triangle_color, triangle_points)
 
-    # Dibujar la franja diagonal en rojo oscuro que sea paralela al triángulo
+    # Dibujar la franja diagonal que sea paralela al triángulo
     pygame.draw.polygon(screen, stripe_color, stripe_points)
 
-    # Dibujar la pokeball de fondo.
+    # Franja adicional (si se define)
+    if extra_stripe_points:
+        pygame.draw.polygon(screen, stripe_color, extra_stripe_points)
+
+    # Dibujar la imagen de fondo.
     image = pygame.image.load(img_path)
 
     # Escalar la imagen de la Pokéball a 600px
@@ -827,6 +841,41 @@ def draw_stats_tb(screen, rect, font_size, pokemon):
         stat_value_rect = stat_value_surface.get_rect(center=(value_x, value_y))
         screen.blit(stat_value_surface, stat_value_rect)
 
+    # Añadir el rectángulo para el nombre de la habilidad debajo del gráfico de estadísticas
+    ability_rect_y = y + height + 5
+    draw_rectangles(
+        screen,
+        start_x=x,
+        start_y=ability_rect_y,
+        rect_width=width,
+        rect_height=40,
+        padding=5,
+        border_radius=0,
+        rect_color=(255, 255, 255),
+        font_size=font_size,
+        text_values={"Ability": pokemon.ability['name']},
+        left_half_color=(220, 220, 220)
+    )
+
+    # Añadir el rectángulo de descripción de la habilidad debajo de la habilidad
+    description_rect_y = ability_rect_y + 45
+
+    # Limpiamos el texto de saltos de línea y espacios adicionales y lo dividimos en frases
+    ability_effect = pokemon.ability['effect'].replace('\n', ' ').replace('  ', ' ').strip().split('. ')
+
+    # Tomar solo la primera frase
+    first_sentence = ability_effect[0] if len(ability_effect) == 1 else ability_effect[0] + '.'
+
+    draw_box(
+        screen,
+        content=first_sentence,
+        start_x=x,
+        start_y=description_rect_y,
+        rect_width=width,
+        rect_height=100,
+        font_size=font_size
+    )
+
 
 def draw_moves_tab(screen, pokemon, position, font_size, selected_move_index=None,
                    box_color=(255, 255, 255), text_color=(0, 0, 0), gray_color=(84, 84, 84), selected_color=(0, 0, 0)):
@@ -912,7 +961,7 @@ def draw_moves_tab(screen, pokemon, position, font_size, selected_move_index=Non
 def draw_rectangles(screen, start_x, start_y, rect_width, rect_height, padding, border_radius, rect_color, font_size,
                     text_values=None, left_half_color=(220, 220, 220)):
     """
-    Dibuja un conjunto de rectángulos con un borde redondeado en la pantalla.
+    Dibuja un conjunto de rectángulos en la pantalla.
 
     :param screen: La superficie en la que dibujar.
     :param start_x: La posición X inicial para el primer rectángulo.
@@ -964,13 +1013,13 @@ def draw_text_in_rect(screen, position, line_height, text_values, font, rect_wid
         raise TypeError("Expected text_values to be a dictionary, got {}".format(type(text_values)))
 
     for j, (label, value) in enumerate(text_values.items()):
-        # Preparar el texto para el label (mitad izquierda, parte gris)
+        # Preparar el texto para el label (mitad izquierda)
         label_surface = font.render(f"{label}", True, (0, 0, 0))
         label_rect = label_surface.get_rect(
             center=(position[0] + rect_width // 4, position[1] + j * line_height + line_height // 2)
         )
 
-        # Preparar el texto para el value (mitad derecha, parte blanca)
+        # Preparar el texto para el value (mitad derecha)
         value_surface = font.render(f"{value}", True, (0, 0, 0))
         value_rect = value_surface.get_rect(
             center=(position[0] + 3 * rect_width // 4, position[1] + j * line_height + line_height // 2)
@@ -983,12 +1032,12 @@ def draw_text_in_rect(screen, position, line_height, text_values, font, rect_wid
         screen.blit(value_surface, value_rect)
 
 
-def draw_description(screen, description, start_x, start_y, rect_width, rect_height, font_size, padding=10):
+def draw_box(screen, content, start_x, start_y, rect_width, rect_height, font_size, padding=10):
     """
-    Dibuja una caja de descripción.
+    Dibuja una caja en pantalla con contenido adaptable (descripciones, texto, diccionarios...).
 
     :param screen: La superficie en la que dibujar.
-    :param description: El texto de la descripción del movimiento.
+    :param content: El contenido a mostrar (string o diccionario).
     :param start_x: La posición X inicial para el rectángulo.
     :param start_y: La posición Y inicial para el rectángulo.
     :param rect_width: El ancho del rectángulo.
@@ -996,29 +1045,35 @@ def draw_description(screen, description, start_x, start_y, rect_width, rect_hei
     :param font_size: Tamaño de la fuente para el texto.
     :param padding: El espacio entre el rectángulo y el texto.
     """
-    # Dibuja el rectángulo blanco para la descripción
+    # Dibuja el rectángulo blanco para la caja
     rect = pygame.Rect(start_x, start_y, rect_width, rect_height)
     pygame.draw.rect(screen, (255, 255, 255), rect)
 
     # Crear la fuente para el texto
     font = pygame.font.Font("../assets/fonts/pokemon.ttf", font_size)
 
-    # Ajustar el texto
-    wrapped_text = wrap_text(description, font, rect_width - 2 * padding)
+    # Calcular el alto de una línea de texto
     line_height = font.size("Tg")[1]
 
-    # Calcular la altura total del texto para centrarlo
-    total_text_height = len(wrapped_text) * line_height
-    text_y = start_y + (rect_height - total_text_height) // 2
+    # Ajustar el contenido si es un texto
+    if isinstance(content, str):
+        # Ajustar texto y limitarlo al espacio vertical disponible
+        wrapped_text = wrap_text(content, font, rect_width - 2 * padding)
+        visible_lines_count = (rect_height - 2 * padding) // line_height
 
-    # Dibujar cada línea de texto centrada horizontalmente
-    for i, line in enumerate(wrapped_text):
-        line_surface = font.render(line, True, (0, 0, 0))
+        # Obtener solo las líneas que caben en la caja
+        visible_lines = wrapped_text[:visible_lines_count]
 
-        # Calcular posición centrada horizontalmente para cada línea
-        text_x = start_x + (rect_width - line_surface.get_width()) // 2
-        line_rect = line_surface.get_rect(topleft=(text_x, text_y + i * line_height))
-        screen.blit(line_surface, line_rect)
+        # Dibujar las líneas visibles, alineadas a la izquierda
+        for i, line in enumerate(visible_lines):
+            line_surface = font.render(line, True, (0, 0, 0))
+            text_x = start_x + padding  # margen izquierdo
+            text_y = start_y + padding + i * line_height
+            screen.blit(line_surface, (text_x, text_y))
+
+    elif isinstance(content, dict):
+        # Para el caso de diccionario, usar draw_text_in_rect para mostrar clave-valor
+        draw_text_in_rect(screen, (start_x + padding, start_y + padding), line_height, content, font, rect_width - 2 * padding)
 
 
 def wrap_text(text, font, max_width):
@@ -1149,6 +1204,9 @@ def draw_combat_pokemon_status_box(screen, pokemon, position, is_player_pokemon,
         "small": pygame.font.Font("../assets/fonts/pokemon.ttf", 15),
     }
 
+    # Iconos de género
+    gender_icon = GenderIcons(icon_size=(20, 20))
+
     # Ajustar la altura de la caja si es el Pokémon del jugador
     if is_player_pokemon:
         box_height += 25
@@ -1157,8 +1215,9 @@ def draw_combat_pokemon_status_box(screen, pokemon, position, is_player_pokemon,
     pygame.draw.rect(screen, colors["light_gray"], (*position, box_width, box_height))
     pygame.draw.rect(screen, colors["black"], (*position, box_width, box_height), 2)  # Borde negro
 
-    # Dibujar nombre y nivel del Pokémon
+    # Dibujar nombre, género y nivel del Pokémon
     draw_text(screen, fonts["large"], pokemon.name, colors["black"], (position[0] + 10, position[1] + 2))
+    draw_gender_icon(screen, gender_icon, pokemon, position[0] + box_width - 95, position[1] + 8)
     draw_text(screen, fonts["medium"], f"Lv. {pokemon.level}", colors["black"],
               (position[0] + box_width - 68, position[1] + 5))
 
@@ -1633,3 +1692,15 @@ def draw_pokedex_badges(screen, player, x, y, font, region_range,
     # Dibujar el número de Pokémon capturados/avistados
     count_text = font.render(f"{pokemon_count}", True, text_color)
     screen.blit(count_text, (rect.x + rect.width - 32, rect.y + rect.height // 2 - count_text.get_height() // 2))
+
+
+def draw_gender_icon(screen, gender_icons, pokemon, icon_x, icon_y):
+    """Dibuja el icono del género del pokémon."""
+
+    gender_icon = None
+
+    if pokemon.gender in ['male', 'female']:
+        gender_icon = gender_icons.get_icon(pokemon.gender)
+
+    if gender_icon:
+        screen.blit(gender_icon, (icon_x, icon_y))

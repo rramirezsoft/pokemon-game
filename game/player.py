@@ -80,6 +80,7 @@ class Player:
     def capture_pokemon(self, pokemon):
         """Intenta capturar un nuevo Pokémon."""
         if self.bag.get_item_amount('pokeballs') > 0:
+            print("Has capturado al pokemon")
             self.bag.use_item('pokeballs', 1)
             self.pokedex_captured.add(pokemon.name)
 
@@ -87,7 +88,6 @@ class Player:
                 self.pokemons.append(pokemon)
             else:
                 self.pc.append(pokemon)
-
             return True
         else:
             print("No tienes Poké Balls suficientes.")

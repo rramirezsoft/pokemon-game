@@ -28,9 +28,9 @@ class PokedexScreen(BaseScreen):
         "Nacional": 0
     }
 
-    def __init__(self, player):
+    def __init__(self, player, selected_index=0, region_index=0):
         super().__init__(player)
-        self.current_region_index = 0
+        self.current_region_index = region_index
         self.font = pygame.font.Font(utils.load_font(), 30)
 
         # Flechas
@@ -41,7 +41,7 @@ class PokedexScreen(BaseScreen):
         self.pokemon_data = utils.load_pokemon_data()
         self.filtered_pokemon_data = self.filter_pokemon_by_region()
         self.current_scroll_position = 0  # Posición de desplazamiento actual
-        self.selected_index = 0  # Índice del Pokémon seleccionado dentro de la región
+        self.selected_index = selected_index  # Índice del Pokémon seleccionado dentro de la región
         self.selected_pokemon = None
 
         # Variables para desplazamiento continuo
@@ -85,7 +85,8 @@ class PokedexScreen(BaseScreen):
             # Ver los datos del Pokémon seleccionado si lo presionamos y está disponible
             elif event.key == pygame.K_x:
                 if self.selected_pokemon['name'].capitalize() in self.player.pokedex_seen:
-                    return PokedexDataScreen(self.player, self.selected_pokemon)
+                    return PokedexDataScreen(self.player, self.selected_pokemon,
+                                             self.selected_index, self.current_region_index)
 
         elif event.type == pygame.KEYUP:
             if event.key == pygame.K_DOWN or event.key == pygame.K_UP:
@@ -102,7 +103,8 @@ class PokedexScreen(BaseScreen):
             footer_button = self.footer.handle_events(event)
             if footer_button == "Data":
                 if self.selected_pokemon['name'].capitalize() in self.player.pokedex_seen:
-                    return PokedexDataScreen(self.player, self.selected_pokemon)
+                    return PokedexDataScreen(self.player, self.selected_pokemon,
+                                             self.selected_index, self.current_region_index)
             elif footer_button == "Back":
                 from game.screen.main_menu_screen import MainMenuScreen
                 return MainMenuScreen(self.player)
@@ -210,26 +212,63 @@ class PokedexScreen(BaseScreen):
 
 
 class PokedexDataScreen(BaseScreen):
-    def __init__(self, player, pokemon):
+    def __init__(self, player, pokemon, selected_index, region_index):
         super().__init__(player)
-
         self.pokemon = pokemon
+        self.selected_index = selected_index
+        self.region_index = region_index
         self.footer = ui.Footer()
 
     def handle_events(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_BACKSPACE or event.key == pygame.K_ESCAPE:
-                return PokedexScreen(self.player)
+                return PokedexScreen(self.player, selected_index=self.selected_index, region_index=self.region_index)
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if self.footer.handle_events(event):
-                return PokedexScreen(self.player)
+                return PokedexScreen(self.player, selected_index=self.selected_index, region_index=self.region_index)
         return self
 
     def update(self):
         pass
 
     def draw(self, screen):
-        screen.fill((255, 255, 255))
+        screen_width, screen_height = screen.get_size()
+        stripe_width = 100
+
+        # Fondo
+        ui.draw_pokemon_background(screen, [(120 + stripe_width, 0),
+                                            (882.73, 0), (580, screen_height),
+                                            (-82.73, screen_height)],
+                                    [(120, 0),(120 + stripe_width, 0),
+                                    (-182.73 + stripe_width, screen_height), (-182.73, screen_height)],
+                                   (110, 215), (370, 370), triangle_color=(255, 107, 43),
+                                   stripe_color=(255, 70, 32), background_color=(255, 245, 254),
+                                   img_path="../assets/img/pokemon_menu/pokedex_fondo.png", angle_rotation=8,
+                                   extra_stripe_points=[(screen_width - 120, screen_height),
+                                                        (screen_width - 120 - stripe_width, screen_height),
+                                                        (882.73, 0), (882.73 + stripe_width,0)])
+
+        # Dibujar el Pokémon seleccionado
+        img_path = f"../assets/pokemon_images/{self.pokemon['name'].lower()}.png"
+        pokemon_image = pygame.transform.scale(pygame.image.load(img_path), (350, 350))
+        screen.blit(pokemon_image, (35, 90))
+
+        text_values = {
+            "Class":"·d",
+            "Power": "d",
+            "Accuracy":"d"
+        }
+
+        pokemon_info = {
+            "Tipo": "Agua",
+            "Altura": "0.8 m",
+            "Peso": "12.5 kg",
+            "ID": "007"
+        }
+        ui.draw_box(screen, pokemon_info, 300, 50, 200, 150, font_size=18)
+
+        ui.draw_box(screen, "Pokemon Tortuga", 300, 202, 200, 150, font_size=18)
+
         self.footer.draw(screen)
         pygame.display.flip()

@@ -143,7 +143,7 @@ class DeleteGameScreen(BaseScreen):
             else:
                 return LoadGameScreen(self.player)
         elif self.dialog_stage == 'deleted_data':
-            from oak_intro_screen import OakIntroScreen
+            from game.screen.oak_intro_screen import OakIntroScreen
             return OakIntroScreen()
         return self
 

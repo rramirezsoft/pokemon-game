@@ -29,7 +29,7 @@ def get_pokemon_data(pokemon_name_or_id, retries=3, delay=5):
             if i < retries - 1:
                 print(f"Reintentando en {delay} segundos... (Intento {i + 1}/{retries})")
                 time.sleep(delay)
-                delay *= 2  # Duplicar el tiempo de espera
+                delay *= 2
             else:
                 print("Error persistente al obtener datos del Pokémon después de varios intentos.")
                 return None
@@ -45,7 +45,7 @@ def get_move_details(move_url, retries=3, delay=5):
             response = session.get(move_url, timeout=15)
             response.raise_for_status()
             move_data = response.json()
-            move_details = {
+            return {
                 'name': move_data['name'],
                 'type': move_data['type']['name'],
                 'power': move_data['power'] if move_data['power'] else "N/A",
@@ -55,7 +55,6 @@ def get_move_details(move_url, retries=3, delay=5):
                 'description': move_data['effect_entries'][0]['short_effect']
                 if move_data['effect_entries'] else "No description available"
             }
-            return move_details
         except requests.exceptions.Timeout:
             print("Timeout al obtener los detalles del movimiento.")
             if i < retries - 1:
@@ -85,55 +84,52 @@ def get_pokemon_moves(pokemon_data):
                     level_learned = version_detail['level_learned_at']
                     move_details = get_move_details(move_url)
                     if move_details:
-                        move_info = {
+                        moves.append({
                             'name': move_name,
                             'level': level_learned,
-                            'type': move_details['type'],
-                            'power': move_details['power'],
-                            'pp': move_details['pp'],
-                            'accuracy': move_details['accuracy'],
-                            'damage_class': move_details['damage_class'],
-                            'description': move_details['description']
-                        }
-                        moves.append(move_info)
+                            **move_details
+                        })
     return moves
 
 
 def get_pokemon_stats(pokemon_data):
     """Obtiene las estadísticas base y los EVs del Pokémon"""
-    stats = {}
-    for stat in pokemon_data['stats']:
-        stat_name = stat['stat']['name']
-        base_stat = stat['base_stat']
-        evs = stat['effort']
-        stats[stat_name] = {
-            'base_stat': base_stat,
-            'evs': evs
-        }
-    return stats
+    return {stat['stat']['name']: {
+        'base_stat': stat['base_stat'],
+        'evs': stat['effort']
+    } for stat in pokemon_data['stats']}
 
 
 def get_pokemon_types(pokemon_data):
     """Obtiene los tipos del Pokémon"""
-    types = [type_['type']['name'] for type_ in pokemon_data['types']]
-    return types
+    return [type_['type']['name'] for type_ in pokemon_data['types']]
 
 
 def get_pokemon_physical_attributes(pokemon_data):
     """Obtiene la altura y el peso del Pokémon"""
-    height = pokemon_data['height']
-    weight = pokemon_data['weight']
-    return {"height": height, "weight": weight}
+    return {"height": pokemon_data['height'], "weight": pokemon_data['weight']}
 
 
 def get_pokemon_species_data(pokemon_id, retries=3, delay=5):
-    """Obtiene información adicional de la especie del Pokémon, incluyendo si es legendario"""
+    """Obtiene información adicional de la especie del Pokémon"""
     url = f"{POKEAPI_SPECIES_URL}{pokemon_id}"
     for i in range(retries):
         try:
             response = session.get(url, timeout=15)
             response.raise_for_status()
-            return response.json()
+            species_data = response.json()
+
+            # Extraer datos de la especie
+            return {
+                'is_legendary': species_data.get('is_legendary', False),
+                'is_mythical': species_data.get('is_mythical', False),
+                'capture_rate': species_data.get('capture_rate', 0),
+                'gender_rate': species_data.get('gender_rate', -1),  # -1 indica género desconocido
+                'description': next((entry['flavor_text'] for entry in species_data['flavor_text_entries']
+                                     if entry['language']['name'] == 'en'), "Description not available."),
+                'evolution_chain': get_evolution_chain(species_data['evolution_chain']['url'])
+            }
+
         except requests.exceptions.Timeout:
             print(f"Timeout al obtener datos de la especie del Pokémon {pokemon_id}.")
             if i < retries - 1:
@@ -148,35 +144,120 @@ def get_pokemon_species_data(pokemon_id, retries=3, delay=5):
             return None
 
 
-def download_pokemon_image(pokemon_id, pokemon_name, save_directory='../assets/pokemon_images'):
-    """Descargar la imagen de un Pokémon y guardarla con su nombre en el directorio especificado."""
+def get_evolution_chain(evolution_chain_url, retries=3, delay=5):
+    """Obtiene la cadena evolutiva del Pokémon"""
+    for i in range(retries):
+        try:
+            response = session.get(evolution_chain_url, timeout=15)
+            response.raise_for_status()
+            chain_data = response.json()
+            evolutions = []
+            current_stage = chain_data['chain']
+            while current_stage:
+                evolution_details = current_stage['evolves_to']
+                evolves_to = []
+                for evo in evolution_details:
+                    # Verificar si 'evolution_details' existe y tiene elementos
+                    if evo['evolution_details']:
+                        evo_details = evo['evolution_details'][0]  # Solo tomamos el primer detalle
+                        evolves_to.append({
+                            'name': evo['species']['name'],
+                            'min_level': evo_details.get('min_level'),
+                            'trigger': evo_details.get('trigger', {}).get('name'),
+                            'item': evo_details.get('item', {}).get('name') if evo_details.get('item') else None
+                        })
+                    else:
+                        evolves_to.append({
+                            'name': evo['species']['name'],
+                            'min_level': None,
+                            'trigger': None,
+                            'item': None
+                        })
+                evolutions.append({
+                    'name': current_stage['species']['name'],
+                    'evolves_to': evolves_to
+                })
+                current_stage = evolution_details[0] if evolution_details else None
+            return evolutions
+        except requests.exceptions.Timeout:
+            if i < retries - 1:
+                time.sleep(delay)
+                delay *= 2
+            else:
+                return None
+        except requests.exceptions.RequestException:
+            return None
+
+
+def get_pokemon_abilities(pokemon_data, retries=3, delay=5):
+    """Obtiene las habilidades y sus efectos."""
+    abilities = []
+    for ability in pokemon_data['abilities']:
+        ability_name = ability['ability']['name']
+        url = ability['ability']['url']
+        for i in range(retries):
+            try:
+                response = session.get(url, timeout=15)
+                response.raise_for_status()
+                effect = next((entry['effect'] for entry in response.json()['effect_entries']
+                               if entry['language']['name'] == 'en'), "No effect available")
+                abilities.append({'name': ability_name, 'effect': effect})
+                break  # Rompe el ciclo si se realiza la solicitud sin errores
+            except requests.exceptions.RequestException as e:
+                print(f"Error al obtener habilidad {ability_name}: {e}")
+                if i < retries - 1:
+                    time.sleep(delay)
+                    delay *= 2
+                else:
+                    print(f"Se omitió la habilidad {ability_name} después de varios intentos.")
+                    abilities.append({'name': ability_name, 'effect': "No effect available"})
+                    break
+    return abilities
+
+
+def download_file(url, file_name, save_directory):
+    """Descarga un archivo desde una URL y lo guarda."""
     if not os.path.exists(save_directory):
         os.makedirs(save_directory)
 
-    # URL para descargar la imagen oficial del artwork del Pokémon
-    url = (f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/"
-           f"pokemon/other/official-artwork/{pokemon_id}.png")
-
-    for i in range(3):  # Intentos para descargar la imagen
+    for i in range(3):  # Intentos para descargar el archivo
         try:
             response = session.get(url, timeout=15)
             if response.status_code == 200:
-                image_path = os.path.join(save_directory, f"{pokemon_name.lower()}.png")
-                with open(image_path, 'wb') as file:
+                file_path = os.path.join(save_directory, file_name)
+                with open(file_path, 'wb') as file:
                     file.write(response.content)
-                print(f"Imagen del Pokémon {pokemon_name} descargada.")
-                break
+                print(f"Archivo {file_name} descargado.")
+                return True  # Indica que la descarga fue exitosa
             else:
-                print(f"Error al descargar la imagen del Pokémon {pokemon_name}. "
-                      f"Código de estado: {response.status_code}")
+                print(f"Error al descargar el archivo {file_name}. Código de estado: {response.status_code}")
         except requests.exceptions.Timeout:
-            print("Timeout al descargar la imagen.")
+            print(f"Timeout al descargar el archivo {file_name}.")
             if i < 2:
                 print("Reintentando en 5 segundos...")
                 time.sleep(5)
         except requests.exceptions.RequestException as e:
-            print(f"Error al descargar la imagen del Pokémon {pokemon_name}: {e}")
+            print(f"Error al descargar el archivo {file_name}: {e}")
             break
+    return False  # Indica que la descarga falló
+
+
+def download_pokemon_image(pokemon_id, pokemon_name, save_directory='../assets/pokemon_images'):
+    """Descargar la imagen de un Pokémon y guardarla."""
+    url = (f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/"
+           f"pokemon/other/official-artwork/{pokemon_id}.png")
+    file_name = f"{pokemon_name.lower()}.png"
+    download_file(url, file_name, save_directory)
+
+
+def download_pokemon_sound(pokemon_name, save_directory='../assets/pokemon_sounds'):
+    """Descarga el sonido de un Pokémon y lo guarda."""
+    sound_url = f"https://play.pokemonshowdown.com/audio/cries/{pokemon_name}.mp3"
+    if sound_url:
+        file_name = f"{pokemon_name.lower().split('-')[0]}.mp3"
+        download_file(sound_url, file_name, save_directory)
+    else:
+        print(f"No se pudo descargar el sonido del Pokémon {pokemon_name}.")
 
 
 def collect_pokemon_info(pokemon_name_or_id):
@@ -184,36 +265,43 @@ def collect_pokemon_info(pokemon_name_or_id):
     pokemon_data = get_pokemon_data(pokemon_name_or_id)
     if pokemon_data:
         species_data = get_pokemon_species_data(pokemon_data['id'])
-        is_legendary = species_data['is_legendary'] if species_data else False
 
         pokemon_info = {
-            'id': pokemon_data['id'],  # Número de la Pokedex
-            'name': pokemon_data['name'],
+            'id': pokemon_data['id'],
+            'name': pokemon_data['name'].split('-')[0],
             'types': get_pokemon_types(pokemon_data),
+            'abilities': get_pokemon_abilities(pokemon_data),
             'stats': get_pokemon_stats(pokemon_data),
             'moves': get_pokemon_moves(pokemon_data),
             'physical_attributes': get_pokemon_physical_attributes(pokemon_data),
-            'image_url': f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official"
-                         f"-artwork/{pokemon_data['id']}.png",
-            'is_legendary': is_legendary
+            'species': species_data,
+            'image_url': f"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/{pokemon_data['id']}.png",
+            'sound_url':f"https://play.pokemonshowdown.com/audio/cries/{pokemon_data['name']}.mp3"
         }
         return pokemon_info, pokemon_data['id']
     else:
-        return None, None
+        return None
 
 
 def collect_pokemon():
     """Recoge y guarda los datos de los Pokémon de las generaciones 1 a 5"""
     all_pokemon_data = []
-    for pokemon_id in range(1, 650):  # Pokémon hasta la quinta generación (649 Pokémon)
+    for pokemon_id in range(1, 650):
         print(f"Obteniendo datos del Pokémon con ID {pokemon_id}...")
         pokemon_info, pokemon_api_id = collect_pokemon_info(pokemon_id)
         if pokemon_info:
             all_pokemon_data.append(pokemon_info)
-            download_pokemon_image(pokemon_api_id, pokemon_info['name'])
+            print(f"Datos del Pokémon con ID {pokemon_id} obtenidos con éxito.")
+        time.sleep(1)
 
-    # Guardar la información en un archivo JSON
     with open("data/poke_data.json", 'w') as file:
         json.dump(all_pokemon_data, file, indent=4)
 
-    print("Datos de los Pokémon de las generaciones 1 a 5 guardados en 'poke_data.json'")
+    print("Datos de los Pokémon guardados en 'poke_data.json'")
+
+
+
+if __name__ == '__main__':
+    collect_pokemon()
+
+

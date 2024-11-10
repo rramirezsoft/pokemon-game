@@ -17,6 +17,7 @@ def serialize_pokemon(pokemon):
         "name": pokemon.name,
         "level": pokemon.level,
         "types": pokemon.types,
+        "ability": pokemon.ability,
         "base_stats": pokemon.base_stats,
         'evs': pokemon.evs,
         'ivs': pokemon.ivs,
@@ -24,6 +25,7 @@ def serialize_pokemon(pokemon):
         'moves': pokemon.moves,
         'height': pokemon.height,
         'weight': pokemon.weight,
+        'gender': pokemon.gender,
         'status': pokemon.status,
     }
 
@@ -32,11 +34,13 @@ def deserialize_pokemon(data):
     return Pokemon(
         name=data['name'],
         types=data['types'],
+        abilities=[data['ability']],
         base_stats=data['base_stats'],
         evs=data['evs'],
         moves=data['moves'],
         height=data['height'],
         weight=data['weight'],
+        gender_rate=data['gender'],
         pokedex_id=data['pokedex_id'],
         random_id=data['id'],
         experience=data.get('experience', 0),

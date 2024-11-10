@@ -4,6 +4,7 @@ from game import utils
 import game.ui as ui
 from game.combat import Combat
 from game.dialogue_manager import TextDisplayManager, DialogueManager
+from game.icons import GenderIcons
 from game.screen.base_screen import BaseScreen
 
 
