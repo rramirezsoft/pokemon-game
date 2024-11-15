@@ -51,6 +51,7 @@ class MainMenuScreen(BaseScreen):
             mouse_pos = event.pos
             for button_name, button in self.buttons.items():
                 if button.is_clicked(mouse_pos):
+                    self.sound_manager.play_sound_effect("click_button")
                     return self.handle_button_click(button_name)
         elif event.type == self.sound_manager.MUSIC_END_EVENT:
             self.sound_manager.play_random_menu_music()

@@ -24,7 +24,8 @@ class SoundManager:
         }
         self.sound_effects = {
             "level_up": pygame.mixer.Sound("../assets/sound/sound_effect/level_up.mp3"),
-            "click_button": pygame.mixer.Sound("../assets/sound/sound_effect/click_button.mp3")
+            "click_button": pygame.mixer.Sound("../assets/sound/sound_effect/click_button.mp3"),
+            "button_8": pygame.mixer.Sound("../assets/sound/sound_effect/button-8.mp3"),
         }
 
         # Inicialización de lista de música para el menú

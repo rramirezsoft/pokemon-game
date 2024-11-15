@@ -85,16 +85,19 @@ class PokemonMenuScreen(BaseScreen):
                             print("Índice fuera de rango.")
 
                     elif event.key == pygame.K_BACKSPACE or event.key == pygame.K_ESCAPE:
+
                         if self.slot_selected is not None:
                             # Deseleccionar la caja y ocultar el menú
                             self.deselect_slot()
                         else:
+                            self.sound_manager.play_sound_effect("click_button")
                             if self.combat:
                                 return self.combat
                             from game.screen.main_menu_screen import MainMenuScreen
                             return MainMenuScreen(self.player)
 
                     elif event.key == pygame.K_x and self.slot_selected is None and not self.combat:
+                        self.sound_manager.play_sound_effect("click_button")
                         return PcScreen(self.player)
 
                 elif self.show_menu:
@@ -103,11 +106,13 @@ class PokemonMenuScreen(BaseScreen):
                         # Mover la selección hacia abajo en el mini menú
                         self.mini_menu.selected_index = (self.mini_menu.selected_index + 1) % len(
                             self.mini_menu.options)
+                        self.sound_manager.play_sound_effect("click_button")
 
                     elif event.key == pygame.K_UP:
                         # Mover la selección hacia arriba en el mini menú
                         self.mini_menu.selected_index = (self.mini_menu.selected_index - 1) % len(
                             self.mini_menu.options)
+                        self.sound_manager.play_sound_effect("click_button")
 
                     elif event.key == pygame.K_RETURN:
                         # Ejecutar la opción seleccionada en el mini menú y cambiar de pantalla si es necesario
@@ -181,14 +186,12 @@ class PokemonMenuScreen(BaseScreen):
                             self.moving_slot] is not None and
                                 0 <= index < len(self.pokemon_team) and self.pokemon_team[index] is not None):
                             self.swap_pokemon_slots(self.moving_slot, index)
-                        else:
-                            print(
-                                "No se puede realizar el intercambio: asegúrate de que ambos slots contengan Pokémon.")
                         self.moving_slot = None  # Terminar el modo de movimiento
                         self.show_menu = False  # Ocultar el mini menú
 
             # Manejo del clic en el mini menú
             if self.show_menu:
+                self.sound_manager.play_sound_effect("click_button")
                 option_index = self.mini_menu.is_option_clicked(event.pos)
                 if option_index is not None:
                     self.mini_menu.selected_index = option_index
@@ -204,11 +207,13 @@ class PokemonMenuScreen(BaseScreen):
                         # Deseleccionar la caja si está seleccionada
                         self.deselect_slot()
                     else:
+                        self.sound_manager.play_sound_effect("click_button")
                         if self.combat:
                             return self.combat
                         from game.screen.main_menu_screen import MainMenuScreen
                         return MainMenuScreen(self.player)
                 elif footer_button_clicked == "PC":
+                    self.sound_manager.play_sound_effect("click_button")
                     # Si clican en el botón "PC", navega a la pantalla de PC
                     return PcScreen(self.player)
 
@@ -222,13 +227,15 @@ class PokemonMenuScreen(BaseScreen):
             self.deselect_slot()
 
         elif option == "Data":
+            utils.play_pokemon_sound(self.pokemon_team[self.selected_index].sound)
+
+            self.sound_manager.play_sound_effect("click_button")
             if self.combat:
                 return PokemonDataScreen(self.player, self.pokemon_team, self.selected_index, self.combat)
             return PokemonDataScreen(self.player, self.pokemon_team, self.selected_index)
 
         elif option == "Change Pokémon":
-            # Aquí puedes añadir lógica futura para cambiar Pokémon en combate
-            print("Opción de Cambiar Pokémon seleccionada (en combate, aún no implementada).")
+            pass
 
         elif option == "Move":
             # Verificar si hay al menos dos Pokémon para intercambiar
@@ -237,11 +244,10 @@ class PokemonMenuScreen(BaseScreen):
                 # Iniciar el modo de movimiento
                 self.moving_slot = self.selected_index
                 self.show_menu = False  # Ocultar el mini menú mientras se realiza el movimiento
-                print(f"Modo de movimiento iniciado con el slot: {self.moving_slot}")
+                self.sound_manager.play_sound_effect("click_button")
             else:
                 # Si no hay suficientes Pokémon para intercambiar, hacer lo mismo que "Atrás"
                 self.deselect_slot()
-                print("No hay suficientes Pokémon para mover, se vuelve al estado anterior.")
 
     def swap_pokemon_slots(self, slot_a, slot_b):
         """ Intercambia los Pokémon entre dos slots. """
@@ -259,7 +265,7 @@ class PokemonMenuScreen(BaseScreen):
                 self.slots[slot_a].pokemon = pokemon_b
                 self.slots[slot_b].pokemon = pokemon_a
 
-                # Re-inicializar las barras de salud
+                # Reinicializar las barras de salud
                 self.slots[slot_a].health_bar = ui.HealthBar(
                     pokemon_b.max_stats['hp'],
                     pokemon_b.current_hp,
@@ -296,6 +302,7 @@ class PokemonMenuScreen(BaseScreen):
             else:
                 # Si no estamos en modo de movimiento, solo se selecciona una caja
                 slot.selected = (index == self.selected_index)
+        self.sound_manager.play_sound_effect("click_button")
 
     def update(self):
         pass
@@ -314,15 +321,14 @@ class PokemonMenuScreen(BaseScreen):
                 slot_rect.right - 10, slot_rect.top - 10)  # Ajusta la posición según sea necesario
             self.mini_menu.rect.topleft = self.mini_menu.position
             self.mini_menu.show = True
-        else:
-            print("No se puede seleccionar una caja vacía.")
+            self.sound_manager.play_sound_effect("click_button")
 
     def deselect_slot(self):
         """
         Deselecciona la caja seleccionada y vuelve al modo de preselección.
         """
         self.slot_selected = None
-        self.show_menu = False  # Oculta el mini menú
+        self.show_menu = False
         self.update_preselection()
 
     def draw(self, screen):
@@ -413,7 +419,9 @@ class PokemonDataScreen(BaseScreen):
         if event.type == pygame.QUIT:
             pygame.quit()
 
-        elif event.type == pygame.KEYDOWN:
+        elif event.type == pygame.KEYDOWN and event.key in [pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN,
+                                                            pygame.K_RETURN, pygame.K_BACKSPACE, pygame.K_ESCAPE]:
+            self.sound_manager.play_sound_effect("click_button")
 
             # Para cambiar de pestaña dentro de un pokemon
             if event.key == pygame.K_LEFT:
@@ -435,16 +443,18 @@ class PokemonDataScreen(BaseScreen):
                 self.selected_pokemon_index = (self.selected_pokemon_index + 1) % len(self.pokemon_team)
                 self.selected_pokemon = self.pokemon_team[self.selected_pokemon_index]
                 self.selected_move_index = None
+                utils.play_pokemon_sound(self.selected_pokemon.sound)
 
             # Si presionas flecha arriba, mostrar el Pokémon anterior
             elif event.key == pygame.K_UP:
                 self.selected_pokemon_index = (self.selected_pokemon_index - 1) % len(self.pokemon_team)
                 self.selected_pokemon = self.pokemon_team[self.selected_pokemon_index]
                 self.selected_move_index = None
+                utils.play_pokemon_sound(self.selected_pokemon.sound)
 
             if event.key == pygame.K_BACKSPACE or event.key == pygame.K_ESCAPE:
                 if self.selected_move_index is not None:
-                    self.selected_move_index = None  # Des-seleccionar movimiento
+                    self.selected_move_index = None
                 else:
                     if self.combat:
                         return PokemonMenuScreen(self.player, self.combat)
@@ -456,24 +466,32 @@ class PokemonDataScreen(BaseScreen):
             # Si se hace clic en la flecha izquierda
             if self.arrow_left_rect.collidepoint(mouse_pos):
                 self.current_tab = (self.current_tab - 1) % 3
+                self.sound_manager.play_sound_effect("click_button")
 
             # Si se hace clic en la flecha derecha
             if self.arrow_right_rect.collidepoint(mouse_pos):
                 self.current_tab = (self.current_tab + 1) % 3
+                self.sound_manager.play_sound_effect("click_button")
 
             # Llama a las funciones de acción si se hace clic en el área de las flechas (arriba y abajo)
             if self.arrow_up_rect.collidepoint(mouse_pos):
                 self.selected_move_index = None
                 self.previous_pokemon()
+                self.sound_manager.play_sound_effect("click_button")
+                utils.play_pokemon_sound(self.selected_pokemon.sound)
+
             elif self.arrow_down_rect.collidepoint(mouse_pos):
                 self.selected_move_index = None
                 self.next_pokemon()
+                self.sound_manager.play_sound_effect("click_button")
+                utils.play_pokemon_sound(self.selected_pokemon.sound)
 
             if self.current_tab == self.TAB_MOVES:
                 # Verificar clic en los rectángulos de los movimientos
                 for index, rect in enumerate(self.move_rects):
                     if rect.collidepoint(mouse_pos):
                         self.selected_move_index = index
+                        self.sound_manager.play_sound_effect("click_button")
                         break
 
             # Manejo del evento del footer
@@ -484,6 +502,7 @@ class PokemonDataScreen(BaseScreen):
                 if self.combat:
                     return PokemonMenuScreen(self.player, self.combat)
                 return PokemonMenuScreen(self.player, selected_index=self.selected_pokemon_index)
+            self.sound_manager.play_sound_effect("click_button")
 
         return self
 

@@ -177,7 +177,9 @@ class Pokemon:
         sound_path = f'../assets/pokemon_sounds/{self.name.lower()}.mp3'
         if os.path.exists(sound_path):
             return pygame.mixer.Sound(sound_path)
-        return None
+        else:
+            print(f"Sonido no encontrado para {self.name}.")
+            return None
 
     @staticmethod
     def pil_to_pygame(pil_image):

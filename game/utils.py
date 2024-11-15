@@ -120,3 +120,9 @@ def load_pokemon_data(file_path='data/poke_data.json'):
     """Cargar la lista de datos de Pokémon desde un archivo JSON."""
     with open(file_path, 'r') as file:
         return json.load(file)
+
+
+def play_pokemon_sound(sound_object):
+    """Reproduce un sonido del pokemon."""
+    if sound_object is not None:
+        sound_object.play()

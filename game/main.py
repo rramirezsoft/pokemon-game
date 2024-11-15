@@ -13,18 +13,20 @@ WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600  # Medidas de la pantalla
 def main():
     pygame.init()
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    pygame.display.set_caption("Pokémon Game")
+    pygame.display.set_caption("Pokémon Game")  # Título del juego
+    pygame.display.set_icon(pygame.image.load("../assets/img/main_menu/icons/pokeball.png"))  # Icono del juego
 
+    """
     player = Player("RAUL")
-    player.get_starter("cranidos")
+    player.get_starter("chimchar")
     player.pokemons[0].experience = int(player.pokemons[0].experience_to_next_level / 2)
     pokemon_data_list = pok.load_pokemon_data()
-    for i in range(100):
+    for i in range(5):
         new_pokemon = pok.create_random_pokemon(pokemon_data_list)
         player.add_pokemon(new_pokemon)
     current_screen = MainMenuScreen(player)  # Pantalla inicial
-
-    #current_screen = TitleScreen()
+    """
+    current_screen = TitleScreen()
 
     running = True
     while running:

@@ -8,7 +8,7 @@ from game.screen.base_screen import BaseScreen
 
 class PokedexScreen(BaseScreen):
 
-    REGIONS = ["Kanto", "Johto", "Hoenn", "Sinnoh", "Teselia", "Nacional"]
+    REGIONS = ["Kanto", "Johto", "Hoenn", "Sinnoh", "Teselia", "National"]
 
     REGION_ID_RANGES = {
         "Kanto": (1, 151),
@@ -16,7 +16,7 @@ class PokedexScreen(BaseScreen):
         "Hoenn": (252, 386),
         "Sinnoh": (387, 493),
         "Teselia": (494, 649),
-        "Nacional": (1, 649),
+        "National": (1, 649),
     }
 
     REGION_OFFSETS = {
@@ -25,7 +25,7 @@ class PokedexScreen(BaseScreen):
         "Hoenn": 251,
         "Sinnoh": 386,
         "Teselia": 494,
-        "Nacional": 0
+        "National": 0
     }
 
     def __init__(self, player, selected_index=0, region_index=0):
@@ -254,12 +254,6 @@ class PokedexDataScreen(BaseScreen):
         pokemon_image = pygame.transform.scale(pygame.image.load(img_path), (350, 350))
         screen.blit(pokemon_image, (35, 90))
 
-        text_values = {
-            "Class":"·d",
-            "Power": "d",
-            "Accuracy":"d"
-        }
-
         pokemon_info = {
             "Tipo": "Agua",
             "Altura": "0.8 m",
@@ -268,7 +262,9 @@ class PokedexDataScreen(BaseScreen):
         }
         ui.draw_box(screen, pokemon_info, 300, 50, 200, 150, font_size=18)
 
-        ui.draw_box(screen, "Pokemon Tortuga", 300, 202, 200, 150, font_size=18)
+        # Dibujamos la caja con la descripción del Pokémon
+        pokemon_description = self.pokemon["species"]["description"].replace('\n', ' ').replace('\f', ' ')
+        ui.draw_box(screen, pokemon_description, 300, 202, 200, 150, font_size=18)
 
         self.footer.draw(screen)
         pygame.display.flip()

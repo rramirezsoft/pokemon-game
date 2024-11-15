@@ -631,6 +631,23 @@ def draw_interactive_icon(screen, image_path, image_size, coords, action=None):
     screen.blit(icon, coords, action)
 
 
+def draw_rect_with_shadow(screen, rect, shadow_offset=4, shadow_color=(100, 100, 100, 30), border_color=(255, 255, 255)):
+    """
+    Dibuja un rectángulo con sombra y borde.
+
+    :param screen: La pantalla en la que se va a dibujar.
+    :param rect: El rectángulo en el que se dibujará el recuadro (x, y, width, height).
+    :param shadow_offset: Desplazamiento de la sombra.
+    :param shadow_color: Color de la sombra con transparencia.
+    :param border_color: Color del borde del rectángulo.
+    """
+    x, y, width, height = rect
+    shadow_surface = pygame.Surface((width + shadow_offset, height + shadow_offset), pygame.SRCALPHA)
+    pygame.draw.rect(shadow_surface, shadow_color, (shadow_offset, shadow_offset, width, height))
+    screen.blit(shadow_surface, (x, y))
+    pygame.draw.rect(screen, border_color, rect)
+
+
 def draw_info_tab(screen, rect, font_size, pokemon, player):
     """
     :param screen: La pantalla en la que se va a dibujar.
@@ -646,22 +663,7 @@ def draw_info_tab(screen, rect, font_size, pokemon, player):
     # Dimensiones del recuadro
     x, y, width, height = rect
 
-    # Sombra en el lado derecho y abajo
-    shadow_color = (100, 100, 100, 30)  # Color sombra con transparencia
-    shadow_offset = 4  # Desplazamiento de la sombra
-
-    # Crear una superficie con canal alfa para la sombra
-    shadow_surface = pygame.Surface((width + shadow_offset, height + shadow_offset), pygame.SRCALPHA)
-
-    # Dibujar la sombra (rectángulo desplazado)
-    pygame.draw.rect(shadow_surface, shadow_color, (shadow_offset, shadow_offset, width, height))
-
-    # Dibujar la sombra en la pantalla
-    screen.blit(shadow_surface, (x, y))
-
-    pygame.draw.rect(screen, (255, 255, 255), rect)
-
-    x, y, width, height = rect
+    draw_rect_with_shadow(screen, rect)
 
     # Dibuja la mitad izquierda del recuadro en gris claro
     pygame.draw.rect(screen, light_gray, (x, y, width // 2, height))
@@ -742,23 +744,7 @@ def draw_stats_tb(screen, rect, font_size, pokemon):
     # Dimensiones del recuadro
     x, y, width, height = rect
 
-    # Sombra en el lado derecho y abajo
-    shadow_color = (100, 100, 100, 30)  # Color sombra con transparencia
-    shadow_offset = 4  # Desplazamiento de la sombra
-
-    # Crear una superficie con canal alfa para la sombra
-    shadow_surface = pygame.Surface((width + shadow_offset, height + shadow_offset), pygame.SRCALPHA)
-
-    # Dibujar la sombra (rectángulo desplazado)
-    pygame.draw.rect(shadow_surface, shadow_color, (shadow_offset, shadow_offset, width, height))
-
-    # Dibujar la sombra en la pantalla
-    screen.blit(shadow_surface, (x, y))
-
-    pygame.draw.rect(screen, (255, 255, 255), rect)
-
-    # Coordenadas y dimensiones del rectángulo
-    x, y, width, height = rect
+    draw_rect_with_shadow(screen, rect)
 
     # Centro del hexágono
     center_x = x + width // 2
@@ -921,7 +907,6 @@ def draw_moves_tab(screen, pokemon, position, font_size, selected_move_index=Non
 
         # Dibuja el pequeño polígono gris en la sección gris
         small_polygon_width = gray_section_width * 0.6
-        small_polygon_height = box_height
         offset = 20
         top_left = (
             gray_section_rect.left + (gray_section_width - small_polygon_width) / 2 - offset, gray_section_rect.top)
@@ -1230,7 +1215,7 @@ def draw_combat_pokemon_status_box(screen, pokemon, position, is_player_pokemon,
 
     # Dibujar PS actuales y máximos si es el Pokémon del jugador
     if is_player_pokemon:
-        draw_hp_text(screen, pokemon, position, box_width, colors["white"], fonts["medium"])
+        draw_hp_text(screen, pokemon, position, colors["white"], fonts["medium"])
 
     # Dibujar barra de experiencia si es el Pokémon del jugador
     if is_player_pokemon:
@@ -1276,7 +1261,7 @@ def draw_hp_bar(screen, pokemon, position, box_width, colors, small_font):
     draw_text(screen, small_font, "HP", colors["yellow"], (hp_bar_position[0] - 14, hp_bar_position[1] - 4))
 
 
-def draw_hp_text(screen, pokemon, position, box_width, white, font):
+def draw_hp_text(screen, pokemon, position, white, font):
     """Dibuja los PS actuales y máximos si es el Pokémon del jugador."""
     ps_box_width = 135
     ps_box_height = 18
