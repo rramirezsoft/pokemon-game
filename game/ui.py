@@ -1057,8 +1057,37 @@ def draw_box(screen, content, start_x, start_y, rect_width, rect_height, font_si
             screen.blit(line_surface, (text_x, text_y))
 
     elif isinstance(content, dict):
-        # Para el caso de diccionario, usar draw_text_in_rect para mostrar clave-valor
-        draw_text_in_rect(screen, (start_x + padding, start_y + padding), line_height, content, font, rect_width - 2 * padding)
+
+        num_items = len(content)
+        row_height = (rect_height - 2 * padding) / num_items
+        current_y = start_y + padding
+
+        for key, value in content.items():
+            # Renderiza la clave a la izquierda
+            key_surface = font.render(f"{key}", True, (0, 0, 0))
+            key_rect = key_surface.get_rect()
+            key_rect.centerx = start_x + rect_width // 4
+            key_rect.centery = current_y + row_height // 2
+            screen.blit(key_surface, key_rect)
+
+            # Verificamos si el valor es una lista de iconos
+            if isinstance(value, list):
+                icon_x = start_x + rect_width // 2 + 12
+                for i, icon in enumerate(value):
+                    if icon:
+                        screen.blit(icon, (icon_x, current_y + row_height // 2 - icon.get_height() // 2))
+                        icon_x += icon.get_width() + 5
+
+            else:  # Si el valor es texto, renderizarlo
+                value_surface = font.render(str(value), True, (0, 0, 0))
+                value_rect = value_surface.get_rect()
+                value_x = start_x + rect_width // 2 + 17
+                value_rect.left = value_x
+                value_rect.centery = current_y + row_height // 2
+                screen.blit(value_surface, value_rect)
+
+            # Incrementar la posición Y para la siguiente línea
+            current_y += row_height
 
 
 def wrap_text(text, font, max_width):

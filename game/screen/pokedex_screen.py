@@ -3,6 +3,8 @@ import game.ui as ui
 import game.utils as utils
 import time
 
+from game.icons import TypeIcons
+from game.pokemon import Pokemon
 from game.screen.base_screen import BaseScreen
 
 
@@ -28,7 +30,7 @@ class PokedexScreen(BaseScreen):
         "National": 0
     }
 
-    def __init__(self, player, selected_index=0, region_index=0):
+    def __init__(self, player, selected_index=0, region_index=0, current_scroll_position=0):
         super().__init__(player)
         self.current_region_index = region_index
         self.font = pygame.font.Font(utils.load_font(), 30)
@@ -40,7 +42,7 @@ class PokedexScreen(BaseScreen):
         # Cargar datos de Pokémon
         self.pokemon_data = utils.load_pokemon_data()
         self.filtered_pokemon_data = self.filter_pokemon_by_region()
-        self.current_scroll_position = 0  # Posición de desplazamiento actual
+        self.current_scroll_position = current_scroll_position  # Posición de desplazamiento actual
         self.selected_index = selected_index  # Índice del Pokémon seleccionado dentro de la región
         self.selected_pokemon = None
 
@@ -85,8 +87,8 @@ class PokedexScreen(BaseScreen):
             # Ver los datos del Pokémon seleccionado si lo presionamos y está disponible
             elif event.key == pygame.K_x:
                 if self.selected_pokemon['name'].capitalize() in self.player.pokedex_seen:
-                    return PokedexDataScreen(self.player, self.selected_pokemon,
-                                             self.selected_index, self.current_region_index)
+                    return PokedexDataScreen(self.player, self.selected_pokemon,self.selected_index,
+                                             self.current_region_index, self.current_scroll_position)
 
         elif event.type == pygame.KEYUP:
             if event.key == pygame.K_DOWN or event.key == pygame.K_UP:
@@ -103,8 +105,8 @@ class PokedexScreen(BaseScreen):
             footer_button = self.footer.handle_events(event)
             if footer_button == "Data":
                 if self.selected_pokemon['name'].capitalize() in self.player.pokedex_seen:
-                    return PokedexDataScreen(self.player, self.selected_pokemon,
-                                             self.selected_index, self.current_region_index)
+                    return PokedexDataScreen(self.player, self.selected_pokemon, self.selected_index,
+                                             self.current_region_index, self.current_scroll_position)
             elif footer_button == "Back":
                 from game.screen.main_menu_screen import MainMenuScreen
                 return MainMenuScreen(self.player)
@@ -185,7 +187,7 @@ class PokedexScreen(BaseScreen):
                                                            (screen_width // 2 + 180, 45)],
                                                           (255, 255, 255))
 
-        # Dibujar Pokémon visibles usando el nuevo método en ui
+        # Dibujar Pokémon visibles
         ui.draw_pokedex_pokemon_slots(screen, self.player, self.filtered_pokemon_data,
                                       self.REGIONS[self.current_region_index], self.REGION_OFFSETS,
                                       self.current_scroll_position, self.selected_index,
@@ -212,25 +214,112 @@ class PokedexScreen(BaseScreen):
 
 
 class PokedexDataScreen(BaseScreen):
-    def __init__(self, player, pokemon, selected_index, region_index):
+    def __init__(self, player, pokemon, selected_index, region_index, current_scroll_position):
         super().__init__(player)
         self.pokemon = pokemon
         self.selected_index = selected_index
+        print(f"Indice: {self.selected_index}")
         self.region_index = region_index
+        self.current_scroll_position = current_scroll_position
         self.footer = ui.Footer()
+
+        # Obtenemos los datos de la región actual
+        self.region_name = PokedexScreen.REGIONS[self.region_index]
+        id_range = PokedexScreen.REGION_ID_RANGES[self.region_name]
+        offset = PokedexScreen.REGION_OFFSETS.get(self.region_name, 0)
+
+        # Filtramos Pokémon avistados en esta región y calculamos sus índices regionales
+        self.seen_pokemon_data = [
+            p for p in utils.load_pokemon_data()
+            if id_range[0] <= p['id'] <= id_range[1] and p['name'].capitalize() in self.player.pokedex_seen
+        ]
+        self.seen_pokemon_ids = [p['id'] - offset - 1 for p in self.seen_pokemon_data]  # region_id basado en offset
+
+        # Calculamos el índice inicial dentro de `seen_pokemon_data` basado en el `selected_index` original
+        self.selected_index = next(
+            (i for i, p in enumerate(self.seen_pokemon_data) if p['id'] == pokemon['id']),
+            0
+        )
+        # Calculamos el número total de índices en una región
+        self.total_indexes_in_region = PokedexScreen.REGION_ID_RANGES[self.region_name][1] - \
+                                  PokedexScreen.REGION_ID_RANGES[self.region_name][0]
+
+        # Flechas interactivas
+        self.arrow_up_rect = None
+        self.arrow_down_rect = None
+
+        # Variables para manejar el sonido del Pokémon
+        self.sound_cooldown = 0
+        self.pokemon_cry_sound = None
+        self.update_pokemon_sound()
+
+    def update_pokemon_sound(self):
+        """Actualiza el sonido del Pokémon seleccionado."""
+        cry_path = f"../assets/pokemon_sounds/{self.pokemon['name'].lower()}.mp3"
+        self.pokemon_cry_sound = pygame.mixer.Sound(cry_path)
 
     def handle_events(self, event):
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_BACKSPACE or event.key == pygame.K_ESCAPE:
-                return PokedexScreen(self.player, selected_index=self.selected_index, region_index=self.region_index)
+            if event.key == pygame.K_UP:
+                self.previous_pokemon()
+
+            elif event.key == pygame.K_DOWN:
+                self.next_pokemon()
+
+            elif event.key == pygame.K_BACKSPACE or event.key == pygame.K_ESCAPE:
+                region_id = self.pokemon['id'] - PokedexScreen.REGION_OFFSETS[self.region_name] - 1
+                print(f"Region ID: {region_id}")
+                self.current_scroll_position = self.total_indexes_in_region - 8 + (self.total_indexes_in_region - region_id)\
+                    if region_id >= self.total_indexes_in_region - 3 else region_id - 4 if region_id > 3 else 0
+
+
+                return PokedexScreen(self.player, selected_index=region_id, region_index=self.region_index,
+                                     current_scroll_position=self.current_scroll_position)
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            if self.footer.handle_events(event):
-                return PokedexScreen(self.player, selected_index=self.selected_index, region_index=self.region_index)
+            mouse_pos = pygame.mouse.get_pos()
+
+            # Reproducir el sonido del Pokémon al hacer clic en el icono
+            cry_icon_rect = pygame.Rect(680, 95, 40, 40)
+            if cry_icon_rect.collidepoint(mouse_pos):
+                if self.sound_cooldown <= 0:
+                    if self.pokemon_cry_sound is not None:
+                        self.pokemon_cry_sound.play()
+                        self.sound_cooldown = 1
+
+            elif self.arrow_up_rect.collidepoint(mouse_pos):
+               self.previous_pokemon()
+
+            elif self.arrow_down_rect.collidepoint(mouse_pos):
+                self.next_pokemon()
+
+            elif self.footer.handle_events(event):
+                region_id = self.pokemon['id'] - PokedexScreen.REGION_OFFSETS[self.region_name] - 1
+                self.current_scroll_position = region_id - 4 if region_id > 4 else 0
+                return PokedexScreen(self.player, selected_index=region_id, region_index=self.region_index,
+                                     current_scroll_position=self.current_scroll_position)
         return self
 
+    def previous_pokemon(self):
+        """Navega al Pokémon avistado anterior en la lista."""
+        if self.selected_index > 0:
+            self.selected_index -= 1
+            self.update_pokemon_details()
+
+    def next_pokemon(self):
+        """Navega al siguiente Pokémon avistado en la lista."""
+        if self.selected_index < len(self.seen_pokemon_data) - 1:
+            self.selected_index += 1
+            self.update_pokemon_details()
+
+    def update_pokemon_details(self):
+        """Actualiza los detalles del Pokémon seleccionado."""
+        self.pokemon = self.seen_pokemon_data[self.selected_index]
+        self.update_pokemon_sound()
+
     def update(self):
-        pass
+        if self.sound_cooldown > 0:
+            self.sound_cooldown -= 1 / 20
 
     def draw(self, screen):
         screen_width, screen_height = screen.get_size()
@@ -254,17 +343,73 @@ class PokedexDataScreen(BaseScreen):
         pokemon_image = pygame.transform.scale(pygame.image.load(img_path), (350, 350))
         screen.blit(pokemon_image, (35, 90))
 
-        pokemon_info = {
-            "Tipo": "Agua",
-            "Altura": "0.8 m",
-            "Peso": "12.5 kg",
-            "ID": "007"
-        }
-        ui.draw_box(screen, pokemon_info, 300, 50, 200, 150, font_size=18)
+        # Barra con el nombre del Pokémon, su pokédex ID, género e icono.
+        pygame.draw.polygon(screen, (0, 0, 0), [(screen_width/2-50, 30), (screen_width-25, 30), (screen_width-25, 75),
+                                                (screen_width/2-50, 75)])
+        pygame.draw.polygon(screen, (255, 71, 1),
+                            [(screen_width / 2 - 50, 30), (screen_width / 2 + 100, 30), (472, 75),
+                             (screen_width / 2 - 50, 75)])
 
-        # Dibujamos la caja con la descripción del Pokémon
+        # Nombre del Pokémon
+        name_text = pygame.font.Font(utils.load_font(), 32).render(f"{self.pokemon['name'].capitalize()}", True, (255, 255, 255))
+        screen.blit(name_text, (screen_width/2+110, 32))
+
+        # Numero de pokedex
+        pokedex_id_text = pygame.font.Font(utils.load_font(), 24).render(f"No. {self.pokemon['id']}", True, (255, 255, 255))
+        screen.blit(pokedex_id_text, (screen_width/2+15, 40))
+
+        # Icono del pokemon
+        pokemon_image = pygame.transform.scale(pygame.image.load(img_path), (50, 50))
+        screen.blit(pokemon_image, (screen_width/2-50, 30))
+
+        # Icono de la pokeball (capturado/avistado)
+        if self.pokemon['name'].lower() in (name.lower() for name in self.player.pokedex_captured):
+            pokeball_icon_path = "../assets/img/main_menu/icons/pokeball.png"
+        else:
+            pokeball_icon_path = "../assets/img/pokemon_menu/pokeball_white.png"
+
+        # Cargar y dibujar la imagen de la Poké Ball
+        pokeball_icon = pygame.image.load(pokeball_icon_path)
+        pokeball_icon = pygame.transform.scale(pokeball_icon, (38, 38))
+        screen.blit(pokeball_icon, (screen_width -90, 32))
+
+        # Dibujamos flechas interactivas para pasar de un pokemon a otro
+        self.arrow_up_rect = ui.draw_interactive_arrow(screen,
+                                                       [(screen_width // 2 + 150, 27), (screen_width // 2 + 162, 17),
+                                                        (screen_width // 2 + 174, 27)], (255, 255, 255))
+        self.arrow_down_rect = ui.draw_interactive_arrow(screen,
+                                                         [(screen_width // 2 + 150, 78), (screen_width // 2 + 162, 88),
+                                                          (screen_width // 2 + 174, 78)], (255, 255, 255))
+
+        # Sonido del Pokémon
+        ui.draw_box(screen, f"{self.pokemon['name'].capitalize()}'s Cry", screen_width/2-15, 105, screen_width/2 - 50, 50, font_size=25)
+        pokemon_cry_icon_path = f"../assets/img/pokemon_menu/pokemon_cry.png"
+        pokemon_cry_icon = pygame.transform.scale(pygame.image.load(pokemon_cry_icon_path), (40, 40))
+        screen.blit(pokemon_cry_icon, (screen_width-120, 110))
+
+        # Tipos del Pokémon
+        icon_manager = TypeIcons(icon_size=(60, 25))
+        type_icons = [icon_manager.get_icon(pokemon_type.lower()) for pokemon_type in self.pokemon["types"]]
+
+        pokemon_height = int(self.pokemon['physical_attributes']['height']) / 10
+        pokemon_weight = int(self.pokemon['physical_attributes']['weight']) / 10
+
+        pokemon_info = {
+            "Type": type_icons,
+            "Height": f"{pokemon_height} m",
+            "Weight": f"{pokemon_weight} kg",
+            "Capture Rate": (
+        f"{self.pokemon['species']['capture_rate']}"
+        if self.pokemon["name"].lower() in (name.lower() for name in self.player.pokedex_captured)
+        else "??"
+    ),
+        }
+
+        ui.draw_box(screen, pokemon_info, screen_width/2-15, 157, screen_width/2 - 50, 190, font_size=27)
+
+        # Descripción del Pokémon
         pokemon_description = self.pokemon["species"]["description"].replace('\n', ' ').replace('\f', ' ')
-        ui.draw_box(screen, pokemon_description, 300, 202, 200, 150, font_size=18)
+        ui.draw_box(screen, pokemon_description, screen_width/2-15, 349, screen_width/2 - 50, 110, font_size=24)
 
         self.footer.draw(screen)
         pygame.display.flip()

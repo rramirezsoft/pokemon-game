@@ -174,8 +174,6 @@ class PokemonMenuScreen(BaseScreen):
                                     # Si se hace clic en otra caja, preseleccionarla
                                     self.selected_index = index
                                     self.update_preselection()
-                            else:
-                                print("No se puede seleccionar una caja vacía.")
 
                         elif index == self.slot_selected:
                             # Si la caja seleccionada se clickea de nuevo, cerrar el menú
@@ -469,12 +467,12 @@ class PokemonDataScreen(BaseScreen):
                 self.sound_manager.play_sound_effect("click_button")
 
             # Si se hace clic en la flecha derecha
-            if self.arrow_right_rect.collidepoint(mouse_pos):
+            elif self.arrow_right_rect.collidepoint(mouse_pos):
                 self.current_tab = (self.current_tab + 1) % 3
                 self.sound_manager.play_sound_effect("click_button")
 
             # Llama a las funciones de acción si se hace clic en el área de las flechas (arriba y abajo)
-            if self.arrow_up_rect.collidepoint(mouse_pos):
+            elif self.arrow_up_rect.collidepoint(mouse_pos):
                 self.selected_move_index = None
                 self.previous_pokemon()
                 self.sound_manager.play_sound_effect("click_button")
